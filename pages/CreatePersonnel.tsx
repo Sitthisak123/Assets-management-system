@@ -1,0 +1,156 @@
+
+import React from 'react';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  BadgeCheck, 
+  Calendar, 
+  Camera, 
+  Save, 
+  X, 
+  Plus 
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const CreatePersonnel: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="max-w-5xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex flex-col gap-6">
+        <nav className="flex items-center text-sm text-dark-muted">
+          <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Dashboard</button>
+          <span className="mx-2">/</span>
+          <button onClick={() => navigate('/personnel')} className="hover:text-primary transition-colors">Personnel</button>
+          <span className="mx-2">/</span>
+          <span className="text-white font-medium">Create</span>
+        </nav>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Create Personnel</h1>
+          <p className="text-dark-muted text-base max-w-3xl">Add a new employee to the organization directory. Please ensure all required fields marked with <span className="text-primary">*</span> are completed.</p>
+        </div>
+      </div>
+
+      <form className="bg-dark-surface rounded-2xl border border-dark-border shadow-xl overflow-hidden">
+        <div className="p-6 md:p-8 border-b border-dark-border bg-dark-bg/30">
+          <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-slate-900 border-2 border-dashed border-dark-border group-hover:border-primary flex items-center justify-center overflow-hidden transition-colors cursor-pointer relative z-10">
+                <div className="absolute inset-0 bg-cover bg-center opacity-70" style={{ backgroundImage: 'url("https://picsum.photos/seed/newuser/200/200")' }}></div>
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <Camera size={24} className="text-white" />
+                </div>
+              </div>
+              <div className="absolute -bottom-1 -right-1 bg-dark-surface p-1 rounded-full border border-dark-border z-20">
+                <div className="bg-primary rounded-full p-1.5 text-white flex items-center justify-center">
+                  <Plus size={14} />
+                </div>
+              </div>
+            </div>
+            <div className="text-center sm:text-left pt-1">
+              <h3 className="text-lg font-semibold text-white">Profile Photo</h3>
+              <p className="text-sm text-dark-muted mt-1 max-w-sm">Upload a professional headshot. This will be used for ID badges and the internal directory.</p>
+              <div className="flex gap-4 mt-4 justify-center sm:justify-start">
+                <button type="button" className="text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 border border-dark-border px-4 py-2 rounded-lg transition-colors">Choose File</button>
+                <button type="button" className="text-sm font-medium text-red-400 hover:text-red-300 px-2 py-2 transition-colors">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 md:p-8 space-y-12">
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                <User size={18} />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Full Name <span className="text-primary">*</span></label>
+                <input className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Sarah Connor" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Phone Number</label>
+                <div className="relative">
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="+1 (555) 000-0000" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Office Location</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <select className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+                    <option value="">Select an office</option>
+                    <option value="ny">New York (HQ)</option>
+                    <option value="lon">London</option>
+                    <option value="sf">San Francisco</option>
+                    <option value="remote">Remote</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                <BadgeCheck size={18} />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Role & Responsibilities</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Department <span className="text-primary">*</span></label>
+                <select className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer">
+                  <option value="">Select department</option>
+                  <option value="eng">Engineering</option>
+                  <option value="design">Design</option>
+                  <option value="marketing">Marketing</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
+                <input className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Senior Frontend Engineer" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Start Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted pointer-events-none" size={18} />
+                  <input type="date" className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div className="bg-slate-950/50 p-6 md:px-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-dark-border">
+          <button 
+            type="button" 
+            onClick={() => navigate('/personnel')}
+            className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
+          >
+            Cancel
+          </button>
+          <button type="submit" className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2">
+            <Save size={18} />
+            Save Personnel
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default CreatePersonnel;
