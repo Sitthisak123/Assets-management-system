@@ -1,26 +1,86 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
+import { Personnel as PersonnelType } from '../types';
 import { 
   Search, 
-  Filter, 
   Plus, 
   Edit2, 
   Archive, 
   List, 
   Grid as GridIcon, 
   ChevronRight, 
-  Users 
+  Users,
+  Loader
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Personnel: React.FC = () => {
-  const employees = [
-    { id: '1001', name: 'Sarah Johnson', dept: 'Engineering', email: 'sarah.j@company.com', phone: '+1 (555) 012-3456', role: 'Senior Developer', type: 'Full-time', status: 'Active', avatar: 'https://picsum.photos/seed/sarahj/100/100' },
-    { id: '1002', name: 'Michael Chen', dept: 'Product', email: 'm.chen@company.com', phone: '+1 (555) 012-7890', role: 'Product Manager', type: 'Full-time', status: 'On Leave', avatar: 'https://picsum.photos/seed/mchen/100/100' },
-    { id: '1003', name: 'Emily Davis', dept: 'Human Resources', email: 'e.davis@company.com', phone: '+1 (555) 012-4567', role: 'HR Specialist', type: 'Contractor', status: 'Active', avatar: 'https://picsum.photos/seed/emily/100/100' },
-    { id: '1004', name: 'Robert Johnson', dept: 'Marketing', email: 'r.johnson@company.com', phone: '+1 (555) 012-9988', role: 'Marketing Lead', type: 'Full-time', status: 'Terminated', avatar: 'https://picsum.photos/seed/rob/100/100' },
-    { id: '1005', name: 'Marcus Reid', dept: 'Engineering', email: 'marcus.r@company.com', phone: '+1 (555) 012-1122', role: 'Backend Engineer', type: 'Full-time', status: 'Active', avatar: 'https://picsum.photos/seed/marcus/100/100' },
-  ];
+  const [personnel, setPersonnel] = useState<PersonnelType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPersonnel = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('personnel')
+        .select(`
+          id,
+          fullname,
+          position,
+          created_at,
+          profiles (
+            id,
+            username,
+            title,
+            role,
+            status,
+            email,
+            avatar_url
+          )
+        `);
+
+      if (error) {
+        setError(error.message);
+        setPersonnel([]);
+      } else if (data) {
+        // The result from a join is an array, but we expect a single profile.
+        const formattedData = data.map(p => ({
+          ...p,
+          profiles: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+        }));
+        setPersonnel(formattedData as any);
+      }
+      setLoading(false);
+    };
+
+    fetchPersonnel();
+  }, []);
+
+  const getStatusInfo = (status: number | undefined) => {
+    switch (status) {
+      case 1: return { text: 'Active', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+      case 0: return { text: 'Inactive', className: 'bg-slate-500/10 text-slate-400 border-slate-500/20' };
+      case -1: return { text: 'Suspended', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+      default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
+    }
+  };
+  
+  const handleDelete = async (personnelId: number) => {
+    if (window.confirm('Are you sure you want to delete this personnel?')) {
+      const { error } = await supabase
+        .from('personnel')
+        .delete()
+        .eq('id', personnelId);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setPersonnel(personnel.filter(p => p.id !== personnelId));
+      }
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
@@ -42,21 +102,33 @@ const Personnel: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { label: 'Total Employees', value: '1,248', icon: <Users className="text-blue-600" />, bg: 'bg-blue-500/10' },
-          { label: 'Active Now', value: '1,180', icon: <Users className="text-emerald-600" />, bg: 'bg-emerald-500/10' },
-          { label: 'On Leave', value: '24', icon: <Users className="text-amber-600" />, bg: 'bg-amber-500/10' },
-        ].map((c, i) => (
-          <div key={i} className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
-            <div className={`h-12 w-12 rounded-full ${c.bg} flex items-center justify-center`}>
-              {c.icon}
+          <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Users className="text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-muted">{c.label}</p>
-              <p className="text-2xl font-bold text-white">{c.value}</p>
+              <p className="text-sm text-dark-muted">Total Employees</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : totalEmployees}</p>
             </div>
           </div>
-        ))}
+          <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center">
+              <Users className="text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-sm text-dark-muted">Active Now</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : activeEmployees}</p>
+            </div>
+          </div>
+          <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center">
+              <Users className="text-amber-600" />
+            </div>
+            <div>
+              <p className="text-sm text-dark-muted">On Leave</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : onLeaveEmployees}</p>
+            </div>
+          </div>
       </div>
 
       <div className="bg-dark-surface p-4 rounded-xl shadow-sm border border-dark-border flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 backdrop-blur-xl bg-dark-surface/95">
@@ -81,6 +153,15 @@ const Personnel: React.FC = () => {
 
       <div className="bg-dark-surface border border-dark-border rounded-xl shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader className="animate-spin text-primary" size={40} />
+            </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-64 text-red-500">
+              Error: {error}
+            </div>
+          ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-900/40 border-b border-dark-border">
@@ -93,50 +174,45 @@ const Personnel: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
-              {employees.map((emp) => (
+              {personnel.map((emp) => (
                 <tr key={emp.id} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="py-4 px-6 text-sm text-dark-muted font-mono">{emp.id}</td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <img src={emp.avatar} className="h-10 w-10 rounded-full object-cover border-2 border-white/10" alt={emp.name} />
+                      <img src={emp.profiles?.avatar_url || `https://picsum.photos/seed/${emp.id}/100/100`} className="h-10 w-10 rounded-full object-cover border-2 border-white/10" alt={emp.fullname} />
                       <div>
-                        <div className="font-medium text-white">{emp.name}</div>
-                        <div className="text-xs text-dark-muted">{emp.dept}</div>
+                        <div className="font-medium text-white">{emp.fullname}</div>
+                        <div className="text-xs text-dark-muted">{emp.profiles?.title || 'N/A'}</div>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex flex-col text-sm">
-                      <span className="text-slate-300">{emp.email}</span>
-                      <span className="text-xs text-dark-muted">{emp.phone}</span>
+                      <span className="text-slate-300">{emp.profiles?.email || 'N/A'}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-sm text-white">{emp.role}</div>
-                    <div className="text-xs text-dark-muted">{emp.type}</div>
+                    <div className="text-sm text-white">{emp.position}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                      emp.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                      emp.status === 'On Leave' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 
-                      'bg-red-500/10 text-red-400 border-red-500/20'
-                    }`}>
-                      {emp.status}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusInfo(emp.profiles?.status).className}`}>
+                      {getStatusInfo(emp.profiles?.status).text}
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                       <Link to={`/personnel/edit/${emp.id}`} className="p-1.5 text-dark-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"><Edit2 size={18} /></Link>
-                      <button className="p-1.5 text-dark-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"><Archive size={18} /></button>
+                      <button onClick={() => handleDelete(emp.id)} className="p-1.5 text-dark-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"><Archive size={18} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          )}
         </div>
         <div className="bg-dark-surface px-6 py-4 border-t border-dark-border flex items-center justify-between">
-          <p className="text-sm text-dark-muted">Showing <span className="font-medium text-white">1</span> to <span className="font-medium text-white">5</span> of <span className="font-medium text-white">45</span> results</p>
+          <p className="text-sm text-dark-muted">Showing <span className="font-medium text-white">1</span> to <span className="font-medium text-white">{personnel.length}</span> of <span className="font-medium text-white">{personnel.length}</span> results</p>
           <div className="flex items-center gap-2">
             <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 disabled:opacity-50 transition-colors" disabled>Previous</button>
             <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 transition-colors">Next</button>

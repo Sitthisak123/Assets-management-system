@@ -1,16 +1,43 @@
 
-import React from 'react';
-import { Search, Filter, Plus, Edit2, MoreVertical, Download, Printer, Box } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
+import { Material as MaterialType } from '../types';
+import { Search, Filter, Plus, Edit2, MoreVertical, Download, Printer, Box, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Materials: React.FC = () => {
-  const materials = [
-    { sku: 'SKU-1024', name: 'Industrial Solvent X2', category: 'Chemicals', qty: '50 L', price: '$45.00', status: 'In Stock' },
-    { sku: 'SKU-3392', name: 'Copper Wire (Spool)', category: 'Electrical', qty: '0', price: '$120.00', status: 'Out of Stock' },
-    { sku: 'SKU-8821', name: 'M8 Steel Bolts', category: 'Hardware', qty: '150 Units', price: '$0.45', status: 'In Stock' },
-    { sku: 'SKU-0092', name: 'Safety Gloves (L)', category: 'Safety', qty: '12 Pairs', price: '$8.50', status: 'Low Stock' },
-    { sku: 'SKU-1102', name: 'Machine Lubricant', category: 'Chemicals', qty: '200 L', price: '$12.25', status: 'In Stock' },
-  ];
+  const [materials, setMaterials] = useState<MaterialType[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('material')
+        .select('*, material_type(title)');
+      
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setMaterials(data as any);
+      }
+      setLoading(false);
+    };
+
+    fetchMaterials();
+  }, []);
+
+  const getStatusInfo = (quantity: number) => {
+    if (quantity === 0) return { text: 'Out of Stock', className: 'bg-red-500/10 text-red-400' };
+    if (quantity < 20) return { text: 'Low Stock', className: 'bg-orange-500/10 text-orange-400' };
+    return { text: 'In Stock', className: 'bg-emerald-500/10 text-emerald-400' };
+  };
+
+  const totalSKUs = materials.length;
+  const lowStockCount = materials.filter(m => m.quantity > 0 && m.quantity < 20).length;
+  // Assuming no price field in the schema to calculate total value for now.
+  const totalValue = 'N/A';
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
@@ -26,26 +53,27 @@ const Materials: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {[
-          { label: 'Total SKUs', value: '1,245', change: '5%', icon: <Box className="text-blue-500" />, trend: 'up' },
-          { label: 'Low Stock Alerts', value: '12', change: '2 new', icon: <Box className="text-orange-500" />, trend: 'up' },
-          { label: 'Total Value', value: '$452k', change: '12%', icon: <Box className="text-emerald-500" />, trend: 'up' },
-        ].map((c, i) => (
-          <div key={i} className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
+        <div className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
             <div className="flex items-center justify-between">
-              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">{c.label}</p>
-              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center">
-                {c.icon}
-              </div>
+              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">Total SKUs</p>
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-blue-500"><Box size={20} /></div>
             </div>
-            <div className="flex items-baseline gap-3">
-              <p className="text-white text-3xl font-bold tracking-tight">{c.value}</p>
-              <div className={`flex items-center gap-1 text-emerald-400 text-sm font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full`}>
-                +{c.change}
-              </div>
+            <p className="text-white text-3xl font-bold tracking-tight">{loading ? '...' : totalSKUs}</p>
+        </div>
+        <div className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
+            <div className="flex items-center justify-between">
+              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">Low Stock Alerts</p>
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-orange-500"><Box size={20} /></div>
             </div>
-          </div>
-        ))}
+            <p className="text-white text-3xl font-bold tracking-tight">{loading ? '...' : lowStockCount}</p>
+        </div>
+        <div className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
+            <div className="flex items-center justify-between">
+              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">Total Value</p>
+              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-500"><Box size={20} /></div>
+            </div>
+            <p className="text-white text-3xl font-bold tracking-tight">{loading ? '...' : totalValue}</p>
+        </div>
       </div>
 
       <div className="bg-dark-surface rounded-xl border border-dark-border overflow-hidden shadow-xl">
@@ -75,23 +103,27 @@ const Materials: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
+          {loading ? (
+             <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={40} /></div>
+          ) : error ? (
+            <div className="text-red-500 p-6">Error: {error}</div>
+          ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-800/30 border-b border-dark-border">
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted w-14">
                   <input type="checkbox" className="rounded border-slate-600 bg-slate-900 text-primary h-4 w-4" />
                 </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">SKU / Item Details</th>
+                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">Item Details</th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">Category</th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted text-right">Qty</th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted text-right">Unit Price</th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">Status</th>
                 <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted w-20 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
-              {materials.map((m, i) => (
-                <tr key={i} className="group hover:bg-slate-800/20 transition-colors">
+              {materials.map((m) => (
+                <tr key={m.id} className="group hover:bg-slate-800/20 transition-colors">
                   <td className="py-4 px-6">
                     <input type="checkbox" className="rounded border-slate-600 bg-slate-900 text-primary h-4 w-4" />
                   </td>
@@ -101,20 +133,19 @@ const Materials: React.FC = () => {
                         <Box size={20} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-white text-sm font-semibold group-hover:text-primary transition-colors cursor-pointer">{m.name}</span>
-                        <span className="text-slate-500 text-xs font-mono">{m.sku}</span>
+                        <span className="text-white text-sm font-semibold group-hover:text-primary transition-colors cursor-pointer">{m.title}</span>
+                        <span className="text-slate-500 text-xs font-mono">SKU-{m.id}</span>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">{m.category}</span>
+                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">{m.material_type.title}</span>
                   </td>
-                  <td className="py-4 px-6 text-right text-slate-200 text-sm font-medium">{m.qty}</td>
-                  <td className="py-4 px-6 text-right text-dark-muted text-sm font-mono">{m.price}</td>
+                  <td className="py-4 px-6 text-right text-slate-200 text-sm font-medium">{m.quantity} {m.unit}</td>
                   <td className="py-4 px-6">
-                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-full w-fit border border-emerald-500/20 bg-emerald-500/5">
-                      <div className={`h-1.5 w-1.5 rounded-full ${m.status === 'In Stock' ? 'bg-emerald-500 animate-pulse' : m.status === 'Low Stock' ? 'bg-orange-500' : 'bg-red-500'}`}></div>
-                      <span className={`${m.status === 'In Stock' ? 'text-emerald-400' : m.status === 'Low Stock' ? 'text-orange-400' : 'text-red-400'} text-xs font-semibold`}>{m.status}</span>
+                     <div className={`flex items-center gap-2 px-2.5 py-1 rounded-full w-fit border ${getStatusInfo(m.quantity).className.replace('bg-', 'border-')}`}>
+                      <div className={`h-1.5 w-1.5 rounded-full ${getStatusInfo(m.quantity).className.replace('text-', 'bg-')}`}></div>
+                      <span className={`${getStatusInfo(m.quantity).className.split(' ')[1]}`}>{getStatusInfo(m.quantity).text}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6 text-center">
@@ -127,6 +158,7 @@ const Materials: React.FC = () => {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </div>

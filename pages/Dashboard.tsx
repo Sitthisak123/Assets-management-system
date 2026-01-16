@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 import { 
   Users, 
   FileCheck, 
@@ -24,10 +25,26 @@ import {
 import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
+  const [personnelCount, setPersonnelCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchPersonnelCount = async () => {
+      const { count, error } = await supabase
+        .from('personnel')
+        .select('*', { count: 'exact', head: true });
+      
+      if (!error) {
+        setPersonnelCount(count);
+      }
+    };
+
+    fetchPersonnelCount();
+  }, []);
+
   const stats = [
     { 
       label: 'Total Personnel', 
-      value: '142', 
+      value: personnelCount !== null ? personnelCount.toString() : '...', 
       change: '+2.4%', 
       trend: 'up', 
       icon: <Users className="text-primary" />,

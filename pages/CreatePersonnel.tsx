@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   User, 
   Mail, 
@@ -10,12 +10,36 @@ import {
   Camera, 
   Save, 
   X, 
-  Plus 
+  Plus,
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../supabase';
 
 const CreatePersonnel: React.FC = () => {
   const navigate = useNavigate();
+  const [fullname, setFullname] = useState('');
+  const [position, setPosition] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    const { error } = await supabase
+      .from('personnel')
+      .insert([{ fullname, position }]);
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      navigate('/personnel');
+    }
+  };
+
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -33,7 +57,7 @@ const CreatePersonnel: React.FC = () => {
         </div>
       </div>
 
-      <form className="bg-dark-surface rounded-2xl border border-dark-border shadow-xl overflow-hidden">
+      <form onSubmit={handleSubmit} className="bg-dark-surface rounded-2xl border border-dark-border shadow-xl overflow-hidden">
         <div className="p-6 md:p-8 border-b border-dark-border bg-dark-bg/30">
           <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
             <div className="relative group">
@@ -61,6 +85,12 @@ const CreatePersonnel: React.FC = () => {
         </div>
 
         <div className="p-6 md:p-8 space-y-12">
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 flex items-center gap-3">
+              <AlertCircle size={20} />
+              <span>{error}</span>
+            </div>
+          )}
           <section>
             <div className="flex items-center gap-2 mb-6">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
@@ -71,27 +101,32 @@ const CreatePersonnel: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Full Name <span className="text-primary">*</span></label>
-                <input className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Sarah Connor" />
+                <input 
+                  value={fullname}
+                  onChange={(e) => setFullname(e.target.value)}
+                  required
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Sarah Connor" 
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" />
+                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" disabled />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Phone Number</label>
                 <div className="relative">
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="+1 (555) 000-0000" />
+                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="+1 (555) 000-0000" disabled />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Office Location</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <select className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
+                  <select className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer" disabled>
                     <option value="">Select an office</option>
                     <option value="ny">New York (HQ)</option>
                     <option value="lon">London</option>
@@ -113,7 +148,7 @@ const CreatePersonnel: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Department <span className="text-primary">*</span></label>
-                <select className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer">
+                <select className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer" disabled>
                   <option value="">Select department</option>
                   <option value="eng">Engineering</option>
                   <option value="design">Design</option>
@@ -122,13 +157,18 @@ const CreatePersonnel: React.FC = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
-                <input className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Senior Frontend Engineer" />
+                <input 
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  required
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Senior Frontend Engineer" 
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Start Date</label>
                 <div className="relative">
                   <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted pointer-events-none" size={18} />
-                  <input type="date" className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
+                  <input type="date" className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" disabled />
                 </div>
               </div>
             </div>
@@ -143,9 +183,8 @@ const CreatePersonnel: React.FC = () => {
           >
             Cancel
           </button>
-          <button type="submit" className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2">
-            <Save size={18} />
-            Save Personnel
+          <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? 'Saving...' : <><Save size={18} /><span>Save Personnel</span></>}
           </button>
         </div>
       </form>

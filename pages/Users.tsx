@@ -1,5 +1,7 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
+import { Profile } from '../types';
 import { 
   Search, 
   Plus, 
@@ -9,16 +11,55 @@ import {
   CheckCircle, 
   Download, 
   Users as UsersIcon,
-  ChevronRight 
+  ChevronRight,
+  Loader
 } from 'lucide-react';
 
 const Users: React.FC = () => {
-  const users = [
-    { name: 'Alex Smith', email: 'alex.smith@company.com', role: 'Administrator', access: 'Full Access', dept: 'IT Operations', status: 'Active', active: 'Just now', initials: 'AS' },
-    { name: 'Maria Rodriguez', email: 'm.rodriguez@company.com', role: 'Manager', access: 'Approval Level 2', dept: 'Logistics', status: 'Active', active: '4h ago', initials: 'MR' },
-    { name: 'David Johnson', email: 'david.j@company.com', role: 'Viewer', access: 'Read Only', dept: 'Procurement', status: 'Inactive', active: '2d ago', initials: 'DJ' },
-    { name: 'Sarah Lee', email: 's.lee@company.com', role: 'Manager', access: 'Approval Level 1', dept: 'Inventory', status: 'Active', active: '1w ago', initials: 'SL' },
-  ];
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('profiles').select('*');
+      if (error) {
+        setError(error.message);
+      } else {
+        setProfiles(data);
+      }
+      setLoading(false);
+    };
+    fetchProfiles();
+  }, []);
+
+  const getRoleInfo = (role: number) => {
+    switch (role) {
+      case 1: return { name: 'Administrator', access: 'Full Access' };
+      case 0: return { name: 'User', access: 'Standard Access' };
+      default: return { name: 'Unknown', access: 'N/A' };
+    }
+  };
+
+  const getStatusInfo = (status: number) => {
+    switch (status) {
+      case 1: return { text: 'Active', className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
+      case 0: return { text: 'Inactive', className: 'bg-slate-500/10 text-dark-muted border-dark-border' };
+      case -1: return { text: 'Suspended', className: 'bg-red-500/10 text-red-500 border-red-500/20' };
+      default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
+    }
+  };
+  
+  const getInitials = (name: string | null) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const totalUsers = profiles.length;
+  const activeUsers = profiles.filter(p => p.status === 1).length;
+  const adminUsers = profiles.filter(p => p.role === 1).length;
+  const inactiveUsers = profiles.filter(p => p.status !== 1).length;
 
   return (
     <div className="max-w-[1400px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
@@ -46,22 +87,34 @@ const Users: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[
-          { label: 'Total Users', value: '1,248', icon: <UsersIcon size={24} />, color: 'blue' },
-          { label: 'Active Now', value: '854', icon: <CheckCircle size={24} />, color: 'emerald' },
-          { label: 'Admins', value: '12', icon: <Shield size={24} />, color: 'purple' },
-          { label: 'Inactive', value: '24', icon: <UserX size={24} />, color: 'orange' },
-        ].map((s, i) => (
-          <div key={i} className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
-            <div className={`w-12 h-12 rounded-lg bg-${s.color}-500/10 flex items-center justify-center text-${s.color}-500`}>
-              {s.icon}
-            </div>
+          <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500"><UsersIcon size={24} /></div>
             <div>
-              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">{s.label}</p>
-              <p className="text-white text-2xl font-bold">{s.value}</p>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Total Users</p>
+              <p className="text-white text-2xl font-bold">{loading ? '...' : totalUsers}</p>
             </div>
           </div>
-        ))}
+          <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500"><CheckCircle size={24} /></div>
+            <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Active Users</p>
+              <p className="text-white text-2xl font-bold">{loading ? '...' : activeUsers}</p>
+            </div>
+          </div>
+          <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500"><Shield size={24} /></div>
+            <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Admins</p>
+              <p className="text-white text-2xl font-bold">{loading ? '...' : adminUsers}</p>
+            </div>
+          </div>
+          <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
+            <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500"><UserX size={24} /></div>
+            <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Inactive</p>
+              <p className="text-white text-2xl font-bold">{loading ? '...' : inactiveUsers}</p>
+            </div>
+          </div>
       </div>
 
       <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex flex-col md:flex-row gap-4 justify-between items-center">
@@ -84,47 +137,50 @@ const Users: React.FC = () => {
 
       <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
+          {loading ? (
+            <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={40} /></div>
+          ) : error ? (
+            <div className="text-red-500 p-6">Error: {error}</div>
+          ) : (
           <table className="w-full text-left text-sm text-white">
             <thead className="bg-dark-bg/50 border-b border-dark-border text-dark-muted uppercase tracking-wider text-xs font-semibold">
               <tr>
                 <th className="px-6 py-4 w-10"><input type="checkbox" className="rounded bg-slate-900 border-dark-border" /></th>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Role</th>
-                <th className="px-6 py-4">Department</th>
-                <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Last Active</th>
+                <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
-              {users.map((u, i) => (
-                <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
+              {profiles.map((p) => (
+                <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
                   <td className="px-6 py-4"><input type="checkbox" className="rounded bg-slate-900 border-dark-border" /></td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white font-bold text-xs">
-                        {u.initials}
+                        {getInitials(p.username)}
                       </div>
                       <div>
-                        <p className="font-medium text-white">{u.name}</p>
-                        <p className="text-dark-muted text-xs">{u.email}</p>
+                        <p className="font-medium text-white">{p.username}</p>
+                        <p className="text-dark-muted text-xs">{p.email}</p>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
-                      <span className="text-white text-sm">{u.role}</span>
-                      <span className="text-dark-muted text-xs">{u.access}</span>
+                      <span className="text-white text-sm">{getRoleInfo(p.role).name}</span>
+                      <span className="text-dark-muted text-xs">{getRoleInfo(p.role).access}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-dark-muted">{u.dept}</td>
+                  <td className="px-6 py-4 text-dark-muted font-mono text-xs">{new Date(p.updated_at).toLocaleString()}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border ${u.status === 'Active' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-500/10 text-dark-muted border-dark-border'}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${u.status === 'Active' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></span>
-                      {u.status}
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusInfo(p.status).className}`}>
+                      <span className={`h-1.5 w-1.5 rounded-full ${p.status === 1 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></span>
+                      {getStatusInfo(p.status).text}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-dark-muted font-mono text-xs">{u.active}</td>
                   <td className="px-6 py-4 text-right">
                     <button className="p-2 rounded-lg hover:bg-slate-800 text-dark-muted hover:text-white transition-colors"><MoreHorizontal size={20} /></button>
                   </td>
@@ -132,6 +188,7 @@ const Users: React.FC = () => {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       </div>
     </div>

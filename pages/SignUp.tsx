@@ -1,28 +1,34 @@
-
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase';
-import { Grid, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Grid, Lock, Eye, EyeOff, Mail, AlertCircle, CheckCircle } from 'lucide-react';
 
-const Login: React.FC = () => {
+const SignUp: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setSuccess(null);
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
       if (error) throw error;
-      // The onAuthStateChange in App.tsx will handle the redirect
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        setError("User with this email already exists.");
+      } else {
+        setSuccess('Account created! Please check your email for a verification link.');
+        setEmail('');
+        setPassword('');
+      }
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -43,10 +49,10 @@ const Login: React.FC = () => {
           </div>
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white mb-6">
-              Seamless <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Resource Control</span>
+              Join Our <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Internal Platform</span>
             </h1>
             <p className="text-dark-muted text-lg leading-relaxed font-light">
-              Efficiently manage personnel, track material requisitions, and streamline your internal operations from a single, secure portal.
+              Sign up to gain access to our integrated system for managing resources and operations efficiently.
             </p>
           </div>
           <div className="mt-8 p-6 rounded-2xl bg-dark-surface/40 border border-slate-700/50 backdrop-blur-md shadow-2xl">
@@ -71,35 +77,42 @@ const Login: React.FC = () => {
               <Grid className="text-white" size={24} />
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-white">
-              Welcome back
+              Create an account
             </h2>
             <p className="text-dark-muted text-base font-normal">
-              Enter your credentials to access your account.
+              Enter your details to create your account.
             </p>
           </div>
           
-          <form className="flex flex-col gap-5" onSubmit={handleLogin}>
+          <form className="flex flex-col gap-5" onSubmit={handleSignUp}>
             {error && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 flex items-center gap-3">
                 <AlertCircle size={20} />
                 <span>{error}</span>
               </div>
             )}
+            {success && (
+               <div className="bg-green-500/10 border border-green-500/30 text-green-400 text-sm rounded-lg p-3 flex items-center gap-3">
+                <CheckCircle size={20} />
+                <span>{success}</span>
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <label className="text-slate-300 text-sm font-medium leading-normal ml-1">
-                Email Address
+                Email
               </label>
               <div className="relative group">
                 <input 
                   className="flex w-full rounded-xl border-dark-border bg-dark-surface text-white focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-11 pr-4 text-base placeholder:text-slate-500 transition-all duration-200 hover:border-slate-600" 
                   placeholder="e.g. user@company.com" 
-                  type="email"
+                  type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
                   required
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors pointer-events-none flex items-center">
-                  <User size={20} />
+                  <Mail size={20} />
                 </div>
               </div>
             </div>
@@ -112,9 +125,10 @@ const Login: React.FC = () => {
                 <input 
                   className="flex w-full rounded-xl border-dark-border bg-dark-surface text-white focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-11 pr-11 text-base placeholder:text-slate-500 transition-all duration-200 hover:border-slate-600" 
                   placeholder="Enter your password" 
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? "text" : "password"} 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
                   required
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors pointer-events-none flex items-center">
@@ -124,37 +138,28 @@ const Login: React.FC = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
+                  disabled={loading}
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
             </div>
             
-            <div className="flex flex-wrap items-center justify-end gap-y-2 px-1">
-              <a className="text-primary text-sm font-medium hover:text-blue-400 transition-colors" href="#">
-                Forgot Password?
-              </a>
-            </div>
-            
             <button 
               type="submit"
+              className="mt-4 flex w-full items-center justify-center rounded-xl bg-primary hover:bg-primary-dark active:scale-[0.98] text-white h-12 text-base font-semibold leading-normal shadow-lg shadow-primary/20 transition-all duration-200"
               disabled={loading}
-              className="mt-4 flex w-full items-center justify-center rounded-xl bg-primary hover:bg-primary-dark active:scale-[0.98] text-white h-12 text-base font-semibold leading-normal shadow-lg shadow-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in...' : 'Log In'}
+              {loading ? 'Creating account...' : 'Create Account'}
             </button>
           </form>
           
           <div className="text-center">
             <p className="text-slate-500 text-sm">
-              Don't have an account? 
-              <a 
-                className="text-primary font-medium hover:text-blue-400 hover:underline transition-colors ml-1" 
-                href="#/signup"
-                onClick={() => navigate('/signup')}
-              >
-                Sign Up
-              </a>
+              Already have an account? 
+              <Link className="text-primary font-medium hover:text-blue-400 hover:underline transition-colors ml-1" to="/login">
+                Log In
+              </Link>
             </p>
           </div>
           
@@ -169,4 +174,4 @@ const Login: React.FC = () => {
   );
 };
 
-export default Login;
+export default SignUp;

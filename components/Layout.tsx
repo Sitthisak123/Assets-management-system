@@ -1,13 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { Search, Bell, HelpCircle, ChevronDown, Menu } from 'lucide-react';
+import { supabase } from '../supabase';
+import { Search, Bell, HelpCircle, ChevronDown, Menu, LogOut } from 'lucide-react';
 
 const Layout: React.FC = () => {
   const location = useLocation();
   const pageTitle = location.pathname.split('/')[1];
   const capitalizedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-dark-bg">
@@ -42,20 +48,37 @@ const Layout: React.FC = () => {
               
               <div className="h-6 w-[1px] bg-dark-border mx-1 hidden sm:block"></div>
               
-              <button className="flex items-center gap-3 group">
-                <div className="relative">
-                  <div 
-                    className="bg-center bg-no-repeat bg-cover rounded-full size-8 bg-slate-700 ring-2 ring-transparent group-hover:ring-primary/50 transition-all" 
-                    style={{ backgroundImage: 'url("https://picsum.photos/seed/admin/100/100")' }}
-                  ></div>
-                  <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full ring-2 ring-dark-bg"></div>
-                </div>
-                <div className="hidden sm:flex flex-col items-start">
-                  <span className="text-sm font-medium text-white group-hover:text-primary transition-colors leading-tight">Admin User</span>
-                  <span className="text-[10px] text-dark-muted uppercase tracking-wider font-semibold">Manager</span>
-                </div>
-                <ChevronDown size={16} className="text-dark-muted hidden sm:block group-hover:text-white transition-colors" />
-              </button>
+              <div 
+                className="relative"
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)}
+              >
+                <button className="flex items-center gap-3 group">
+                  <div className="relative">
+                    <div 
+                      className="bg-center bg-no-repeat bg-cover rounded-full size-8 bg-slate-700 ring-2 ring-transparent group-hover:ring-primary/50 transition-all" 
+                      style={{ backgroundImage: 'url("https://picsum.photos/seed/admin/100/100")' }}
+                    ></div>
+                    <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full ring-2 ring-dark-bg"></div>
+                  </div>
+                  <div className="hidden sm:flex flex-col items-start">
+                    <span className="text-sm font-medium text-white group-hover:text-primary transition-colors leading-tight">Admin User</span>
+                    <span className="text-[10px] text-dark-muted uppercase tracking-wider font-semibold">Manager</span>
+                  </div>
+                  <ChevronDown size={16} className="text-dark-muted hidden sm:block group-hover:text-white transition-colors" />
+                </button>
+                {isDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1">
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>

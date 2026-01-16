@@ -1,17 +1,52 @@
 
-import React from 'react';
-/* Added FileCheck to the lucide-react imports */
-import { Search, Filter, Plus, Edit2, Eye, ChevronRight, Hash, FileCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
+import { MrForm } from '../types';
+import { Search, Filter, Plus, Edit2, Eye, ChevronRight, Hash, FileCheck, Loader, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Requisitions: React.FC = () => {
-  const requisitions = [
-    { id: 'REQ-001', date: 'Oct 24, 2023', user: 'John Doe', dept: 'Engineering', items: '5 items', cost: '$1,200.00', status: 'Pending', color: 'indigo' },
-    { id: 'REQ-002', date: 'Oct 23, 2023', user: 'Jane Smith', dept: 'HR', items: '12 items', cost: '$450.00', status: 'Approved', color: 'pink' },
-    { id: 'REQ-003', date: 'Oct 22, 2023', user: 'Mike Ross', dept: 'Sales', items: '2 items', cost: '$80.00', status: 'Rejected', color: 'green' },
-    { id: 'REQ-004', date: 'Oct 21, 2023', user: 'Rachel Green', dept: 'Marketing', items: '8 items', cost: '$2,100.00', status: 'Pending', color: 'orange' },
-    { id: 'REQ-005', date: 'Oct 20, 2023', user: 'Monica Geller', dept: 'Culinary', items: '15 items', cost: '$3,500.00', status: 'Approved', color: 'yellow' },
-  ];
+  const [requisitions, setRequisitions] = useState<MrForm[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRequisitions = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('mr_form')
+        .select(`
+          *,
+          creator:profiles(username),
+          owner:personnel(fullname),
+          mr_form_materials(count)
+        `);
+
+      if (error) {
+        setError(error.message);
+      } else if (data) {
+        setRequisitions(data as any);
+      }
+      setLoading(false);
+    };
+
+    fetchRequisitions();
+  }, []);
+
+  const handleDelete = async (requisitionId: number) => {
+    if (window.confirm('Are you sure you want to delete this requisition?')) {
+      const { error } = await supabase
+        .from('mr_form')
+        .delete()
+        .eq('id', requisitionId);
+
+      if (error) {
+        setError(error.message);
+      } else {
+        setRequisitions(requisitions.filter(r => r.id !== requisitionId));
+      }
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
@@ -44,15 +79,19 @@ const Requisitions: React.FC = () => {
 
       <div className="bg-dark-surface rounded-xl border border-dark-border shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
+          {loading ? (
+            <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={40} /></div>
+          ) : error ? (
+            <div className="text-red-500 p-6">Error: {error}</div>
+          ) : (
           <table className="w-full text-left min-w-[900px]">
             <thead>
               <tr className="bg-slate-900/50 border-b border-dark-border">
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider w-32">ID</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Date Created</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Requester</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Department</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Owner</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Items</th>
-                <th className="px-6 py-4 text-right text-dark-muted text-xs font-semibold uppercase tracking-wider">Total Cost</th>
                 <th className="px-6 py-4 text-center text-dark-muted text-xs font-semibold uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-right text-dark-muted text-xs font-semibold uppercase tracking-wider">Actions</th>
               </tr>
@@ -60,50 +99,39 @@ const Requisitions: React.FC = () => {
             <tbody className="divide-y divide-dark-border">
               {requisitions.map((req) => (
                 <tr key={req.id} className="hover:bg-white/5 transition-colors group">
-                  <td className="px-6 py-4 text-white text-sm font-medium tracking-wide">{req.id}</td>
-                  <td className="px-6 py-4 text-dark-muted text-sm">{req.date}</td>
+                  <td className="px-6 py-4 text-white text-sm font-medium tracking-wide">REQ-{req.id}</td>
+                  <td className="px-6 py-4 text-dark-muted text-sm">{new Date(req.created_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-white text-sm">
                     <div className="flex items-center gap-3">
-                      <div className={`size-8 rounded-full bg-gradient-to-br from-slate-400 to-slate-600`}></div>
-                      <div className="font-medium">{req.user}</div>
+                      <div className="font-medium">{req.creator.username}</div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-dark-muted text-sm">
-                    <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800 border border-slate-700 text-xs text-slate-300">
-                      <span className={`w-1.5 h-1.5 rounded-full bg-${req.color}-400`}></span>
-                      {req.dept}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-dark-muted text-sm">{req.items}</td>
-                  <td className="px-6 py-4 text-right text-white text-sm font-medium tabular-nums">{req.cost}</td>
+                  <td className="px-6 py-4 text-dark-muted text-sm">{req.owner.fullname}</td>
+                  <td className="px-6 py-4 text-dark-muted text-sm">{req.mr_form_materials[0]?.count || 0} items</td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      req.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 
-                      req.status === 'Pending' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' : 
-                      'bg-red-500/10 text-red-500 border-red-500/20'
-                    }`}>
-                      {req.status}
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
+                      Pending
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                      <button className="text-dark-muted hover:text-white p-1.5 rounded-md"><Edit2 size={16} /></button>
-                      <button className="text-dark-muted hover:text-white p-1.5 rounded-md"><Eye size={16} /></button>
+                      <Link to={`/requisitions/edit/${req.id}`} className="text-dark-muted hover:text-white p-1.5 rounded-md"><Edit2 size={16} /></Link>
+                      <button onClick={() => handleDelete(req.id)} className="text-dark-muted hover:text-red-500 p-1.5 rounded-md"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+          )}
         </div>
         <div className="border-t border-dark-border px-6 py-4 flex items-center justify-between bg-dark-bg/30">
-          <p className="text-sm text-dark-muted">Showing <span className="text-white font-medium">1-5</span> of <span className="text-white font-medium">42</span> results</p>
+          <p className="text-sm text-dark-muted">Showing <span className="text-white font-medium">1-{requisitions.length}</span> of <span className="text-white font-medium">{requisitions.length}</span> results</p>
           <div className="flex items-center gap-2">
             <button className="p-2 rounded border border-dark-border text-dark-muted hover:text-white disabled:opacity-50 transition-colors" disabled>
               <ChevronRight className="rotate-180" size={16} />
             </button>
             <button className="px-3 py-1.5 rounded bg-primary text-white text-sm font-bold">1</button>
-            <button className="px-3 py-1.5 rounded border border-dark-border text-dark-muted text-sm hover:text-white transition-colors">2</button>
             <button className="p-2 rounded border border-dark-border text-dark-muted hover:text-white transition-colors">
               <ChevronRight size={16} />
             </button>
