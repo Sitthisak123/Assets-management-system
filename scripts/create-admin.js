@@ -26,8 +26,9 @@ const adminUser = {
   email: 'james2525337017@gmail.com',
   password: 'secure-password-12345',
   // You can add more profile details here if needed
-  username: 'Admin',
-  title: 'Site Administrator'
+  username: 'Admin123',
+  title: 'Site Administrator',
+
 };
 // -----------------------------
 

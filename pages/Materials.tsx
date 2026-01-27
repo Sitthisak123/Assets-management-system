@@ -16,7 +16,6 @@ const Materials: React.FC = () => {
       const { data, error } = await supabase
         .from('material')
         .select('*, material_type(title)');
-      
       if (error) {
         setError(error.message);
       } else if (data) {
@@ -24,7 +23,7 @@ const Materials: React.FC = () => {
       }
       setLoading(false);
     };
-
+    
     fetchMaterials();
   }, []);
 
