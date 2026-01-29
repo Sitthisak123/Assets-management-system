@@ -35,9 +35,7 @@ const Personnel: React.FC = () => {
             username,
             title,
             role,
-            status,
-            email,
-            avatar_url
+            status
           )
         `);
 
@@ -108,7 +106,7 @@ const Personnel: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-dark-muted">Total Employees</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : totalEmployees}</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : "totalEmployees"}</p>
             </div>
           </div>
           <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
@@ -117,7 +115,7 @@ const Personnel: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-dark-muted">Active Now</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : activeEmployees}</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : "activeEmployees"}</p>
             </div>
           </div>
           <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
@@ -126,7 +124,7 @@ const Personnel: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-dark-muted">On Leave</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : onLeaveEmployees}</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : "onLeaveEmployees"}</p>
             </div>
           </div>
       </div>

@@ -28,7 +28,6 @@ const adminUser = {
   // You can add more profile details here if needed
   username: 'Admin123',
   title: 'Site Administrator',
-
 };
 // -----------------------------
 
