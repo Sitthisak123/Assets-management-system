@@ -1,18 +1,20 @@
 
 import React, { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { supabase } from '../supabase';
+import { authService } from '../src/services/authService';
 import { Search, Bell, HelpCircle, ChevronDown, Menu, LogOut } from 'lucide-react';
 
 const Layout: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const pageTitle = location.pathname.split('/')[1];
   const capitalizedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    authService.logout();
+    navigate('/login');
   };
 
   return (

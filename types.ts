@@ -1,22 +1,20 @@
 export interface Profile {
-  id: string; // uuid
-  username: string | null;
-  title: string | null;
+  id: number;
+  username: string;
+  title: string;
   role: number;
   status: number;
-  personnel_id: number | null;
+  personnel_id: number;
   created_at: string;
   updated_at: string;
-  email?: string;
-  avatar_url?: string;
+  email: string;
 }
 
 export interface Personnel {
   id: number;
   fullname: string;
   position: string;
-  created_at: string;
-  profiles: Profile | null;
+  users?: Profile[] | null;
 }
 
 export interface MaterialType {
@@ -40,6 +38,7 @@ export interface MrFormMaterial {
   mr_form_id: number;
   material_id: number;
   quantity: number;
+  material: Material;
 }
 
 export interface MrForm {
@@ -47,14 +46,16 @@ export interface MrForm {
   subject: string;
   ref_no: string;
   description: string | null;
-  date: string;
-  owing_to: string | null;
-  creator_id: string;
-  authorizer_id: string | null;
-  owner_personnel_id: number;
+  purpose: string | null;
+  status: number;
+  form_date: string;
   created_at: string;
   updated_at: string;
+  creator_id: number;
+  owner_id: number;
+  authorizer_id: number | null;
   creator: Profile;
   owner: Personnel;
-  mr_form_materials: { count: number }[];
+  authorizer?: Profile | null;
+  mr_form_materials: MrFormMaterial[];
 }

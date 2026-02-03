@@ -1,6 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { personnelService } from '../src/services/personnelService';
+import { materialService } from '../src/services/materialService';
+import { requisitionService } from '../src/services/requisitionService';
+import { authService } from '../src/services/authService';
 import { Personnel, Material } from '../types';
 import { Info, ShoppingCart, UploadCloud, Trash2, PlusCircle, ArrowRight, ChevronRight, Loader, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -20,13 +22,15 @@ const CreateRequisition: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: personnelData, error: personnelError } = await supabase.from('personnel').select('*');
-      if (personnelError) setError(personnelError.message);
-      else setPersonnel(personnelData);
+      try {
+        const personnelRes = await personnelService.getPersonnel();
+        setPersonnel(personnelRes.data);
 
-      const { data: materialsData, error: materialsError } = await supabase.from('material').select('*');
-      if(materialsError) setError(materialsError.message);
-      else setMaterials(materialsData);
+        const materialsRes = await materialService.getMaterials();
+        setMaterials(materialsRes.data);
+      } catch (err: any) {
+        setError(err.message);
+      }
     };
     fetchData();
   }, []);
@@ -55,7 +59,7 @@ const CreateRequisition: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = authService.getCurrentUser();
     if (!user || !ownerId) {
       setError("User must be logged in and an owner must be selected.");
       setLoading(false);
@@ -68,38 +72,22 @@ const CreateRequisition: React.FC = () => {
       return;
     }
 
-    const { data: form, error: formError } = await supabase
-      .from('mr_form')
-      .insert({
-        subject,
-        date,
-        owner_personnel_id: ownerId,
-        creator_id: user.id,
-        ref_no: `REQ-${Math.floor(Math.random() * 10000)}`
-      })
-      .select()
-      .single();
+    const requisitionData = {
+      subject,
+      form_date: date,
+      owner_id: ownerId,
+      // The creator_id will be set on the backend from the JWT
+      items: items.map(item => ({
+        material_id: item.material_id,
+        quantity: item.quantity,
+      })),
+    };
 
-    if (formError) {
-      setError(formError.message);
-      setLoading(false);
-      return;
-    }
-
-    const materialItems = items.map(item => ({
-      mr_form_id: form.id,
-      material_id: item.material_id,
-      quantity: item.quantity,
-    }));
-
-    const { error: materialsError } = await supabase
-      .from('mr_form_materials')
-      .insert(materialItems);
-
-    if (materialsError) {
-      setError(materialsError.message);
-    } else {
+    try {
+      await requisitionService.createRequisition(requisitionData);
       navigate('/requisitions');
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   };

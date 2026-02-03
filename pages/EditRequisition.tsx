@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { personnelService } from '../src/services/personnelService';
+import { materialService } from '../src/services/materialService';
+import { requisitionService } from '../src/services/requisitionService';
 import { Personnel, Material, MrForm, MrFormMaterial } from '../types';
 import { Info, ShoppingCart, UploadCloud, Trash2, PlusCircle, ArrowRight, ChevronRight, Loader, AlertCircle, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,38 +24,24 @@ const EditRequisition: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      try {
+        const personnelRes = await personnelService.getPersonnel();
+        setPersonnel(personnelRes.data);
 
-      const { data: personnelData, error: personnelError } = await supabase.from('personnel').select('*');
-      if (personnelError) setError(personnelError.message);
-      else setPersonnel(personnelData);
+        const materialsRes = await materialService.getMaterials();
+        setMaterials(materialsRes.data);
 
-      const { data: materialsData, error: materialsError } = await supabase.from('material').select('*');
-      if(materialsError) setError(materialsError.message);
-      else setMaterials(materialsData);
-
-      if (id) {
-        const { data: formData, error: formError } = await supabase
-          .from('mr_form')
-          .select('*, creator:profiles(username), owner:personnel(fullname)')
-          .eq('id', id)
-          .single();
-
-        if (formError) {
-          setError(formError.message);
-        } else if (formData) {
-          setForm(formData as any);
+        if (id) {
+          const formRes = await requisitionService.getRequisitionById(id);
+          const formData = formRes.data;
+          setForm(formData);
           setSubject(formData.subject);
-          setDate(new Date(formData.date).toISOString().split('T')[0]);
-          setOwnerId(formData.owner_personnel_id);
-
-          const { data: itemsData, error: itemsError } = await supabase
-            .from('mr_form_materials')
-            .select('*')
-            .eq('mr_form_id', id);
-          
-          if(itemsError) setError(itemsError.message);
-          else setItems(itemsData || []);
+          setDate(new Date(formData.form_date).toISOString().split('T')[0]);
+          setOwnerId(formData.owner_id);
+          setItems(formData.mr_form_materials || []);
         }
+      } catch (err: any) {
+        setError(err.message);
       }
       setLoading(false);
     };
@@ -86,39 +74,21 @@ const EditRequisition: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const { error: formError } = await supabase
-      .from('mr_form')
-      .update({ subject, date, owner_personnel_id: ownerId })
-      .eq('id', id);
+    const requisitionData = {
+      subject,
+      form_date: date,
+      owner_id: ownerId,
+      items: items.map(item => ({
+        material_id: item.material_id,
+        quantity: item.quantity,
+      })),
+    };
 
-    if (formError) {
-      setError(formError.message);
-      setLoading(false);
-      return;
-    }
-
-    // Simple approach: delete all existing items and insert the new ones
-    const { error: deleteError } = await supabase.from('mr_form_materials').delete().eq('mr_form_id', id);
-    if(deleteError) {
-        setError(deleteError.message);
-        setLoading(false);
-        return;
-    }
-
-    const materialItems = items.map(item => ({
-      mr_form_id: parseInt(id, 10),
-      material_id: item.material_id,
-      quantity: item.quantity,
-    }));
-
-    const { error: materialsError } = await supabase
-      .from('mr_form_materials')
-      .insert(materialItems);
-
-    if (materialsError) {
-      setError(materialsError.message);
-    } else {
+    try {
+      await requisitionService.updateRequisition(id, requisitionData);
       navigate('/requisitions');
+    } catch (err: any) {
+      setError(err.message);
     }
     setLoading(false);
   };

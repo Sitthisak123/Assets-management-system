@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Session } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { authService } from './src/services/authService';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -18,28 +17,21 @@ import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
 
 const App: React.FC = () => {
-  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    const user = authService.getCurrentUser();
+    if (user) {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!session ? <Login /> : <Navigate to="/" replace />} />
+        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
         
-        {session ? (
+        {isAuthenticated ? (
           <Route element={<Layout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />

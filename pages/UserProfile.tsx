@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { authService } from '../src/services/authService';
+import { userService } from '../src/services/userService';
 import { Profile } from '../types';
-import { User as SupabaseUser } from '@supabase/supabase-js';
 import { 
   User, 
   Mail, 
@@ -20,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const UserProfile: React.FC = () => {
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -33,22 +32,20 @@ const UserProfile: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
+      const currentUser = authService.getCurrentUser();
 
-      if (user) {
-        setUser(user);
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          setError(error.message);
-        } else if (data) {
+      if (currentUser) {
+        setUser(currentUser);
+        try {
+          // You might need to decode the token to get the user ID
+          // For now, let's assume the backend has a /me endpoint
+          const response = await userService.getUser('me'); 
+          const data = response.data;
           setProfile(data);
           setUsername(data.username || '');
           setTitle(data.title || '');
+        } catch (error: any) {
+          setError(error.message);
         }
       } else {
         setError("No user is logged in.");
@@ -61,27 +58,22 @@ const UserProfile: React.FC = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!profile) return;
 
     setUpdating(true);
     setError(null);
     setSuccess(null);
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ username, title, updated_at: new Date().toISOString() })
-      .eq('id', user.id);
-
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      const response = await userService.updateUser(profile.id.toString(), { username, title });
+      setProfile(response.data);
       setSuccess("Profile updated successfully!");
-      // Optionally re-fetch profile to confirm changes
-      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      if(data) setProfile(data);
+    } catch (error: any) {
+      setError(error.message);
     }
     setUpdating(false);
   };
+
 
   const getStatusInfo = (status: number | undefined) => {
     switch (status) {
@@ -118,7 +110,7 @@ const UserProfile: React.FC = () => {
               <div className="relative group cursor-pointer">
                 <div 
                   className="h-24 w-24 rounded-full bg-cover bg-center border-4 border-dark-bg shadow-md" 
-                  style={{ backgroundImage: `url(${profile?.avatar_url || 'https://picsum.photos/seed/profile/200/200'})` }}
+                  style={{ backgroundImage: `url('https://picsum.photos/seed/profile/200/200')` }}
                 ></div>
                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera size={24} className="text-white" />
@@ -169,7 +161,7 @@ const UserProfile: React.FC = () => {
                     <label className="text-slate-300 text-sm font-medium">Email Address</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                      <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed" type="email" readOnly value={user?.email || ''} />
+                      <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed" type="email" readOnly value={profile?.email || ''} />
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
 import { Material as MaterialType } from '../types';
 import { Search, Filter, Plus, Edit2, MoreVertical, Download, Printer, Box, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';

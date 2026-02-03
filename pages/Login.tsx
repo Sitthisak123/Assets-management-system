@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabase';
+import { authService } from '../src/services/authService';
 import { Grid, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
@@ -17,14 +17,10 @@ const Login: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      // The onAuthStateChange in App.tsx will handle the redirect
+      await authService.login(email, password);
+      navigate('/');
     } catch (error: any) {
-      setError(error.message);
+      setError(error.response?.data?.message || error.message);
     } finally {
       setLoading(false);
     }

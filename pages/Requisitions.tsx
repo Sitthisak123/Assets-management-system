@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
 import { MrForm } from '../types';
 import { Search, Filter, Plus, Edit2, Eye, ChevronRight, Hash, FileCheck, Loader, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';

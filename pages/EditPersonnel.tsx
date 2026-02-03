@@ -14,7 +14,6 @@ import {
   Loader
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { supabase } from '../supabase';
 
 const EditPersonnel: React.FC = () => {
   const navigate = useNavigate();

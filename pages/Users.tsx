@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { userService } from '../src/services/userService';
 import { Profile } from '../types';
 import { 
   Search, 
@@ -23,13 +23,14 @@ const Users: React.FC = () => {
   useEffect(() => {
     const fetchProfiles = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from('profiles').select('*');
-      if (error) {
+      try {
+        const response = await userService.getUsers();
+        setProfiles(response.data);
+      } catch (error: any) {
         setError(error.message);
-      } else {
-        setProfiles(data);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchProfiles();
   }, []);
