@@ -1,5 +1,21 @@
 import apiClient from './apiClient';
 
+export interface MaterialType {
+  id: number;
+  title: string;
+}
+
+export interface Material {
+  id: number;
+  title: string;
+  material_type_id: number;
+  unit: string;
+  quantity: number;
+  created_at: string;
+  updated_at: string;
+  material_type?: MaterialType;
+}
+
 const getMaterials = () => {
   return apiClient.get('/materials');
 };

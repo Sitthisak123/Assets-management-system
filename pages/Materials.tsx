@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Material as MaterialType } from '../types';
+import { materialService, Material as MaterialType } from '../src/services/materialService';
 import { Search, Filter, Plus, Edit2, MoreVertical, Download, Printer, Box, Loader } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -12,13 +12,11 @@ const Materials: React.FC = () => {
   useEffect(() => {
     const fetchMaterials = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('material')
-        .select('*, material_type(title)');
-      if (error) {
-        setError(error.message);
-      } else if (data) {
-        setMaterials(data as any);
+      try {
+        const response = await materialService.getMaterials();
+        setMaterials(response.data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch materials');
       }
       setLoading(false);
     };
@@ -137,7 +135,7 @@ const Materials: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">{m.material_type.title}</span>
+                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">{m.material_type?.title || 'N/A'}</span>
                   </td>
                   <td className="py-4 px-6 text-right text-slate-200 text-sm font-medium">{m.quantity} {m.unit}</td>
                   <td className="py-4 px-6">

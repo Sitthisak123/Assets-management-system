@@ -1,32 +1,25 @@
-
 import React, { useState, useEffect } from 'react';
-import { MrForm } from '../types';
-import { Search, Filter, Plus, Edit2, Eye, ChevronRight, Hash, FileCheck, Loader, Trash2 } from 'lucide-react';
+import { requisitionService, Requisition } from '../src/services/requisitionService';
+import { Search, Filter, Plus, Edit2, Eye, ChevronRight, FileCheck, Loader, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Requisitions: React.FC = () => {
-  const [requisitions, setRequisitions] = useState<MrForm[]>([]);
+  const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchRequisitions = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('mr_form')
-        .select(`
-          *,
-          creator:profiles(username),
-          owner:personnel(fullname),
-          mr_form_materials(count)
-        `);
-
-      if (error) {
-        setError(error.message);
-      } else if (data) {
-        setRequisitions(data as any);
+      try {
+        const response = await requisitionService.getRequisitions();
+        setRequisitions(response.data);
+      } catch (err: any) {
+        console.error("Fetch error:", err);
+        setError(err.message || 'Failed to fetch requisitions');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchRequisitions();
@@ -34,16 +27,24 @@ const Requisitions: React.FC = () => {
 
   const handleDelete = async (requisitionId: number) => {
     if (window.confirm('Are you sure you want to delete this requisition?')) {
-      const { error } = await supabase
-        .from('mr_form')
-        .delete()
-        .eq('id', requisitionId);
-
-      if (error) {
-        setError(error.message);
-      } else {
+      try {
+        await requisitionService.deleteRequisition(requisitionId);
         setRequisitions(requisitions.filter(r => r.id !== requisitionId));
+      } catch (err: any) {
+        alert(err.message || 'Failed to delete requisition');
       }
+    }
+  };
+
+  const getStatusInfo = (status: number) => {
+    switch (status) {
+      case 1:
+        return { label: 'Approved', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+      case -1:
+        return { label: 'Rejected', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+      case 0:
+      default:
+        return { label: 'Pending', className: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' };
     }
   };
 
@@ -67,7 +68,7 @@ const Requisitions: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted group-focus-within:text-primary transition-colors" size={18} />
           <input 
             className="w-full bg-slate-900 border border-dark-border text-white text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10 h-10 placeholder:text-dark-muted transition-all" 
-            placeholder="Search by ID, Requester or Dept" 
+            placeholder="Search by Ref No, Subject, or Requester" 
           />
         </div>
         <button className="flex items-center gap-2 px-4 h-10 bg-slate-900 border border-dark-border rounded-lg text-sm text-dark-muted hover:text-white transition-colors">
@@ -86,40 +87,46 @@ const Requisitions: React.FC = () => {
           <table className="w-full text-left min-w-[900px]">
             <thead>
               <tr className="bg-slate-900/50 border-b border-dark-border">
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider w-32">ID</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider w-32">Ref No</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Subject</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Date Created</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Requester</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Owner</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Owner (Receiver)</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Items</th>
                 <th className="px-6 py-4 text-center text-dark-muted text-xs font-semibold uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-right text-dark-muted text-xs font-semibold uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
-              {requisitions.map((req) => (
+              {requisitions.map((req) => {
+                const status = getStatusInfo(req.status);
+                return (
                 <tr key={req.id} className="hover:bg-white/5 transition-colors group">
-                  <td className="px-6 py-4 text-white text-sm font-medium tracking-wide">REQ-{req.id}</td>
+                  <td className="px-6 py-4 text-white text-sm font-medium tracking-wide font-mono">{req.ref_no}</td>
+                  <td className="px-6 py-4 text-white text-sm font-medium">{req.subject}</td>
                   <td className="px-6 py-4 text-dark-muted text-sm">{new Date(req.created_at).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-white text-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="font-medium">{req.creator.username}</div>
+                  <td className="px-6 py-4 text-dark-muted text-sm">
+                    <div className="flex flex-col">
+                      <span className="text-white">{req.creator.fullname}</span>
+                      <span className="text-xs opacity-70">{req.creator.position}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-dark-muted text-sm">{req.owner.fullname}</td>
-                  <td className="px-6 py-4 text-dark-muted text-sm">{req.mr_form_materials[0]?.count || 0} items</td>
+                  <td className="px-6 py-4 text-dark-muted text-sm">{req.mr_form_materials?.length || 0} items</td>
                   <td className="px-6 py-4 text-center">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
-                      Pending
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${status.className}`}>
+                      {status.label}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <Link to={`/requisitions/view/${req.id}`} className="text-dark-muted hover:text-blue-400 p-1.5 rounded-md"><Eye size={16} /></Link>
                       <Link to={`/requisitions/edit/${req.id}`} className="text-dark-muted hover:text-white p-1.5 rounded-md"><Edit2 size={16} /></Link>
                       <button onClick={() => handleDelete(req.id)} className="text-dark-muted hover:text-red-500 p-1.5 rounded-md"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           )}

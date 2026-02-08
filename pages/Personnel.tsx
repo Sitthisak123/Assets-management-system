@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Personnel as PersonnelType } from '../types';
+import { personnelService, Personnel as PersonnelType } from '../src/services/personnelService';
 import { 
   Search, 
   Plus, 
@@ -15,6 +14,8 @@ import {
 import { Link } from 'react-router-dom';
 
 const Personnel: React.FC = () => {
+  // Note: Ensure your PersonnelType interface in personnelService is updated 
+  // to match the new flat Users structure (id, fullname, position, email, title, role, status).
   const [personnel, setPersonnel] = useState<PersonnelType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,32 +23,12 @@ const Personnel: React.FC = () => {
   useEffect(() => {
     const fetchPersonnel = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('personnel')
-        .select(`
-          id,
-          fullname,
-          position,
-          created_at,
-          profiles (
-            id,
-            username,
-            title,
-            role,
-            status
-          )
-        `);
-
-      if (error) {
-        setError(error.message);
-        setPersonnel([]);
-      } else if (data) {
-        // The result from a join is an array, but we expect a single profile.
-        const formattedData = data.map(p => ({
-          ...p,
-          profiles: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
-        }));
-        setPersonnel(formattedData as any);
+      try {
+        const response = await personnelService.getPersonnel();
+        console.log("Personnel data fetched:", response.data);
+        setPersonnel(response.data);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch personnel');
       }
       setLoading(false);
     };
@@ -66,18 +47,19 @@ const Personnel: React.FC = () => {
   
   const handleDelete = async (personnelId: number) => {
     if (window.confirm('Are you sure you want to delete this personnel?')) {
-      const { error } = await supabase
-        .from('personnel')
-        .delete()
-        .eq('id', personnelId);
-
-      if (error) {
-        setError(error.message);
-      } else {
+      try {
+        await personnelService.deletePersonnel(personnelId);
         setPersonnel(personnel.filter(p => p.id !== personnelId));
+      } catch (err: any) {
+        setError(err.message || 'Failed to delete personnel');
       }
     }
   };
+
+  const totalEmployees = personnel.length;
+  // FIX: Access status directly on the personnel object
+  const activeEmployees = personnel.filter(p => p.status === 1).length;
+  const onLeaveEmployees = personnel.filter(p => p.status === 0).length;
 
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
@@ -105,7 +87,7 @@ const Personnel: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-dark-muted">Total Employees</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : "totalEmployees"}</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : totalEmployees}</p>
             </div>
           </div>
           <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
@@ -114,7 +96,7 @@ const Personnel: React.FC = () => {
             </div>
             <div>
               <p className="text-sm text-dark-muted">Active Now</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : "activeEmployees"}</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : activeEmployees}</p>
             </div>
           </div>
           <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
@@ -122,8 +104,8 @@ const Personnel: React.FC = () => {
               <Users className="text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-muted">On Leave</p>
-              <p className="text-2xl font-bold text-white">{loading ? '...' : "onLeaveEmployees"}</p>
+              <p className="text-sm text-dark-muted">On Leave / Inactive</p>
+              <p className="text-2xl font-bold text-white">{loading ? '...' : onLeaveEmployees}</p>
             </div>
           </div>
       </div>
@@ -165,35 +147,37 @@ const Personnel: React.FC = () => {
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider w-16">#</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Employee</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Contact</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Role</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Position</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Status</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
-              {personnel.map((emp) => (
+              {personnel.map((emp) => {
+                // FIX: No more nested 'users' object. 'emp' contains all data.
+                return (
                 <tr key={emp.id} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="py-4 px-6 text-sm text-dark-muted font-mono">{emp.id}</td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <img src={emp.profiles?.avatar_url || `https://picsum.photos/seed/${emp.id}/100/100`} className="h-10 w-10 rounded-full object-cover border-2 border-white/10" alt={emp.fullname} />
+                      <img src={`https://picsum.photos/seed/${emp.id}/100/100`} className="h-10 w-10 rounded-full object-cover border-2 border-white/10" alt={emp.fullname} />
                       <div>
                         <div className="font-medium text-white">{emp.fullname}</div>
-                        <div className="text-xs text-dark-muted">{emp.profiles?.title || 'N/A'}</div>
+                        <div className="text-xs text-dark-muted">{emp.title || 'N/A'}</div>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex flex-col text-sm">
-                      <span className="text-slate-300">{emp.profiles?.email || 'N/A'}</span>
+                      <span className="text-slate-300">{emp.email || 'N/A'}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="text-sm text-white">{emp.position}</div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusInfo(emp.profiles?.status).className}`}>
-                      {getStatusInfo(emp.profiles?.status).text}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusInfo(emp.status).className}`}>
+                      {getStatusInfo(emp.status).text}
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right">
@@ -203,7 +187,7 @@ const Personnel: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
           )}

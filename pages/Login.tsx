@@ -17,7 +17,7 @@ const Login: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      await authService.login(email, password);
+      await authService.login({ email, password });
       navigate('/');
     } catch (error: any) {
       setError(error.response?.data?.message || error.message);

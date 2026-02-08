@@ -1,54 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../src/services/authService';
-import { userService } from '../src/services/userService';
-import { Profile } from '../types';
+import { userService, User as UserType } from '../src/services/userService';
 import { 
-  User, 
+  User as UserIcon, // Renamed to avoid collision
   Mail, 
   Shield, 
   Camera, 
   Save, 
   Key, 
-  Lock, 
-  Monitor, 
-  Smartphone, 
   ChevronRight,
   Loader,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Smartphone
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const UserProfile: React.FC = () => {
-  const [user, setUser] = useState<any | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profile, setProfile] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   
+  // Form State
   const [username, setUsername] = useState('');
   const [title, setTitle] = useState('');
+  const [fullname, setFullname] = useState('');
+  const [position, setPosition] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
-      const currentUser = authService.getCurrentUser();
-
-      if (currentUser) {
-        setUser(currentUser);
-        try {
-          // You might need to decode the token to get the user ID
-          // For now, let's assume the backend has a /me endpoint
-          const response = await userService.getUser('me'); 
-          const data = response.data;
-          setProfile(data);
-          setUsername(data.username || '');
-          setTitle(data.title || '');
-        } catch (error: any) {
-          setError(error.message);
-        }
-      } else {
-        setError("No user is logged in.");
+      try {
+        // Use authService to get the currently logged-in user's full details
+        const data = await authService.getProfile();
+        
+        setProfile(data);
+        setUsername(data.username || '');
+        setTitle(data.title || '');
+        setFullname(data.fullname || '');
+        setPosition(data.position || '');
+      } catch (err: any) {
+        setError("Failed to load profile data.");
+        console.error(err);
       }
       setLoading(false);
     };
@@ -65,15 +60,22 @@ const UserProfile: React.FC = () => {
     setSuccess(null);
 
     try {
-      const response = await userService.updateUser(profile.id.toString(), { username, title });
+      // Send all editable fields to the backend
+      const response = await userService.updateUser(profile.id, { 
+        username, 
+        title,
+        fullname,
+        position
+      });
+      
       setProfile(response.data);
       setSuccess("Profile updated successfully!");
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to update profile");
     }
     setUpdating(false);
   };
-
 
   const getStatusInfo = (status: number | undefined) => {
     switch (status) {
@@ -96,7 +98,7 @@ const UserProfile: React.FC = () => {
     <div className="max-w-[960px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2 text-sm text-dark-muted">
-          <span className="font-medium hover:text-primary cursor-pointer transition-colors">Settings</span>
+          <Link to="/" className="font-medium hover:text-primary cursor-pointer transition-colors">Home</Link>
           <ChevronRight size={14} />
           <span className="text-white font-medium">My Profile</span>
         </div>
@@ -104,21 +106,22 @@ const UserProfile: React.FC = () => {
       </div>
 
       <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden shadow-xl">
+        {/* Header Section */}
         <div className="p-6 md:p-8 border-b border-dark-border bg-dark-bg/20">
           <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
             <div className="flex items-center gap-5">
               <div className="relative group cursor-pointer">
                 <div 
                   className="h-24 w-24 rounded-full bg-cover bg-center border-4 border-dark-bg shadow-md" 
-                  style={{ backgroundImage: `url('https://picsum.photos/seed/profile/200/200')` }}
+                  style={{ backgroundImage: `url('https://picsum.photos/seed/${profile?.id}/200/200')` }}
                 ></div>
                 <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <Camera size={24} className="text-white" />
                 </div>
               </div>
               <div className="flex flex-col">
-                <h3 className="text-white text-xl font-bold">{profile?.username || 'User'}</h3>
-                <p className="text-dark-muted text-sm">{profile?.title || 'No title set'}</p>
+                <h3 className="text-white text-xl font-bold">{profile?.fullname || profile?.username}</h3>
+                <p className="text-dark-muted text-sm">{profile?.position} • {profile?.title}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusInfo(profile?.status).className}`}>
                     {getStatusInfo(profile?.status).text}
@@ -133,6 +136,7 @@ const UserProfile: React.FC = () => {
           </div>
         </div>
 
+        {/* Form Section */}
         <form onSubmit={handleUpdateProfile} className="p-6 md:p-8 flex flex-col gap-10">
            {error && (
             <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-3 flex items-center gap-3">
@@ -144,30 +148,60 @@ const UserProfile: React.FC = () => {
               <CheckCircle size={20} /><span>{success}</span>
             </div>
           )}
+          
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-8 space-y-8">
               <section>
                 <h4 className="text-white text-lg font-medium border-b border-dark-border/50 pb-2 mb-6">Personal Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Username */}
                   <div className="space-y-1.5">
                     <label className="text-slate-300 text-sm font-medium">Username</label>
-                    <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" value={username} onChange={e => setUsername(e.target.value)} />
+                    <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                      value={username} onChange={e => setUsername(e.target.value)} />
                   </div>
+
+                  {/* Title (Mr/Ms) */}
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Title</label>
-                     <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" value={title} onChange={e => setTitle(e.target.value)} />
+                    <label className="text-slate-300 text-sm font-medium">Title (Honorific)</label>
+                     <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                      value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Mr., Ms., Dr." />
                   </div>
+
+                  {/* Full Name */}
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-slate-300 text-sm font-medium">Full Name</label>
+                    <div className="relative">
+                      <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                      <input className="w-full bg-dark-bg border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                        value={fullname} onChange={e => setFullname(e.target.value)} />
+                    </div>
+                  </div>
+
+                  {/* Position */}
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-slate-300 text-sm font-medium">Job Position</label>
+                    <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                      value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
+                  </div>
+
+                  {/* Email (Read Only) */}
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-slate-300 text-sm font-medium">Email Address</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                      <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed" type="email" readOnly value={profile?.email || ''} />
+                      <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed" 
+                        type="email" readOnly value={profile?.email || ''} />
                     </div>
+                    <p className="text-xs text-dark-muted">Contact admin to change email address.</p>
                   </div>
+
                 </div>
               </section>
             </div>
 
+            {/* Sidebar / Security */}
             <div className="md:col-span-4 space-y-6">
               <div className="bg-dark-bg/30 rounded-xl p-5 border border-dark-border">
                 <h5 className="text-white text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
@@ -175,21 +209,21 @@ const UserProfile: React.FC = () => {
                   Security
                 </h5>
                 <button type="button" className="w-full flex items-center justify-between p-2 hover:bg-slate-800 rounded-lg text-sm text-slate-300 group transition-colors">
-                  <span className="flex items-center gap-2"><Key size={16} /> Password</span>
+                  <span className="flex items-center gap-2"><Key size={16} /> Change Password</span>
                   <ChevronRight size={14} className="text-dark-muted group-hover:text-white" />
                 </button>
-                <button type="button" className="w-full flex items-center justify-between p-2 hover:bg-slate-800 rounded-lg text-sm text-slate-300 group transition-colors">
-                  <span className="flex items-center gap-2"><Smartphone size={16} /> 2FA Setup</span>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold">ACTIVE</span>
-                </button>
+                <div className="w-full flex items-center justify-between p-2 mt-2 rounded-lg text-sm text-slate-300">
+                  <span className="flex items-center gap-2"><Smartphone size={16} /> 2FA Status</span>
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold border border-emerald-500/20">ENABLED</span>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-6 border-t border-dark-border/30">
-            <button type="button" className="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-dark-border text-white font-medium hover:bg-slate-800 transition-colors">
+            <Link to="/" className="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-dark-border text-white font-medium hover:bg-slate-800 transition-colors text-center">
               Cancel
-            </button>
+            </Link>
             <button type="submit" disabled={updating} className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
               {updating ? <><Loader size={18} className="animate-spin" /><span>Saving...</span></> : <><Save size={18} /><span>Save Changes</span></>}
             </button>
