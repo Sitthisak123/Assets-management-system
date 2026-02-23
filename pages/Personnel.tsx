@@ -25,7 +25,6 @@ const Personnel: React.FC = () => {
       setLoading(true);
       try {
         const response = await personnelService.getPersonnel();
-        console.log("Personnel data fetched:", response.data);
         setPersonnel(response.data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch personnel');

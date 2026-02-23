@@ -73,6 +73,7 @@ const getCurrentUser = (): UserPayload | null => {
   if (token) {
     try {
       const decoded = jwtDecode<UserPayload>(token);
+      // console.log('Decoded Token:', decoded);
       
       // Check for expiration
       if (decoded.exp && decoded.exp * 1000 < Date.now()) {

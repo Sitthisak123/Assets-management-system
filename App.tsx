@@ -19,7 +19,12 @@ import NotFound from './pages/NotFound';
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
   useEffect(() => {
+    // console.log('Checking authentication status...');
     const user = authService.getCurrentUser();
     if (user) {
       setIsAuthenticated(true);
@@ -29,7 +34,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
+        <Route path="/login" element={!isAuthenticated ? <Login onLoginSuccess={handleLoginSuccess} /> : <Navigate to="/" replace />} />
         
         {isAuthenticated ? (
           <Route element={<Layout />}>

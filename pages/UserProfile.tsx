@@ -158,9 +158,12 @@ const UserProfile: React.FC = () => {
                   {/* Username */}
                   <div className="space-y-1.5">
                     <label className="text-slate-300 text-sm font-medium">Username</label>
-                    <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
-                      value={username} onChange={e => setUsername(e.target.value)} />
+                    <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed"
+                      readOnly value={username} onChange={e => setUsername(e.target.value)} />
                   </div>
+                    {/* <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                      readOnly value={username} onChange={e => setUsername(e.target.value)} />
+                  </div> */}
 
                   {/* Title (Mr/Ms) */}
                   <div className="space-y-1.5">
@@ -174,17 +177,23 @@ const UserProfile: React.FC = () => {
                     <label className="text-slate-300 text-sm font-medium">Full Name</label>
                     <div className="relative">
                       <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                      <input className="w-full bg-dark-bg border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
-                        value={fullname} onChange={e => setFullname(e.target.value)} />
+                      <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed"
+                        readOnly value={fullname} onChange={e => setFullname(e.target.value)} />
                     </div>
+                      {/* <input className="w-full bg-dark-bg border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                        readOnly value={fullname} onChange={e => setFullname(e.target.value)} />
+                    </div> */}
                   </div>
 
                   {/* Position */}
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-slate-300 text-sm font-medium">Job Position</label>
-                    <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
-                      value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
+                    <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed"
+                      readOnly value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
                   </div>
+                    {/* <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
+                      readOnly value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
+                  </div> */}
 
                   {/* Email (Read Only) */}
                   <div className="md:col-span-2 space-y-1.5">

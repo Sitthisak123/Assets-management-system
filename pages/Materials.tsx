@@ -135,7 +135,9 @@ const Materials: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">{m.material_type?.title || 'N/A'}</span>
+                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">
+                    {m.material_type?.title || 'N/A'}
+                    </span>
                   </td>
                   <td className="py-4 px-6 text-right text-slate-200 text-sm font-medium">{m.quantity} {m.unit}</td>
                   <td className="py-4 px-6">

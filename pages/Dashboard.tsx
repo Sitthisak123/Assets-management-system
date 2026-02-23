@@ -21,23 +21,56 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { personnelService } from '../src/services/personnelService';
+import { requisitionService } from '../src/services/requisitionService';
+import { materialService } from '../src/services/materialService';
 import { Link } from 'react-router-dom';
 
 const Dashboard: React.FC = () => {
   const [personnelCount, setPersonnelCount] = useState<number | null>(null);
+  const [pendingRequisitions, setPendingRequisitions] = useState<number | null>(null);
+  const [lowMaterials, setLowMaterials] = useState<number | null>(null);
+  const [inventoryValue, setInventoryValue] = useState<number | null>(null);
+  const [barData, setBarData] = useState<any[]>([]);
+  const [pieData, setPieData] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+
 
   useEffect(() => {
-    const fetchPersonnelCount = async () => {
-      const { count, error } = await supabase
-        .from('personnel')
-        .select('*', { count: 'exact', head: true });
-      
-      if (!error) {
-        setPersonnelCount(count);
+    const fetchData = async () => {
+      try {
+        const [
+          personnelRes, 
+          materialsRes, 
+          inventoryValueRes,
+          barDataRes,
+          pieDataRes,
+          recentActivityRes,
+          countFilteredByStatus,
+        ] = await Promise.all([
+          personnelService.getPersonnelCount(),
+          materialService.getAll(),
+          materialService.getInventoryValue(),
+          requisitionService.getRequisitionVolume(Array.from({length: 6}, (_, i) => -i)), // last 6 months
+          materialService.getInventoryDistribution(),
+          requisitionService.getRecentRequisitions(),
+          requisitionService.getCountFilteredByStatus('0'), // -1 rejected, 0 pending, 1 approved
+        ]);
+
+        setPersonnelCount(personnelRes.data.count);
+        setPendingRequisitions(countFilteredByStatus.data.count);
+        setLowMaterials(materialsRes.filter(m => m.quantity < (m.safety_stock ?? 0)).length); // pending real API 
+        setInventoryValue(inventoryValueRes); // pending real API
+        setBarData(barDataRes.data);
+        setPieData(pieDataRes); // pending real API
+        setRecentActivity(recentActivityRes);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        // Handle error state in UI if needed
       }
     };
 
-    fetchPersonnelCount();
+    fetchData();
   }, []);
 
   const stats = [
@@ -51,7 +84,7 @@ const Dashboard: React.FC = () => {
     },
     { 
       label: 'Pending Req.', 
-      value: '12', 
+      value: pendingRequisitions !== null ? pendingRequisitions.toString() : '...', 
       change: '+5.1%', 
       trend: 'up', 
       icon: <FileCheck className="text-orange-500" />,
@@ -59,7 +92,7 @@ const Dashboard: React.FC = () => {
     },
     { 
       label: 'Inventory Value', 
-      value: '$45,200', 
+      value: inventoryValue !== null ? `$${(inventoryValue / 1000).toFixed(1)}k` : '...',
       change: '-1.2%', 
       trend: 'down', 
       icon: <DollarSign className="text-purple-500" />,
@@ -67,35 +100,15 @@ const Dashboard: React.FC = () => {
     },
     { 
       label: 'Materials Low', 
-      value: '8', 
+      value: lowMaterials !== null ? lowMaterials.toString() : '...', 
       status: 'FIX', 
       icon: <AlertTriangle className="text-red-500" />,
       subtext: 'Items below safety stock'
     },
   ];
 
-  const barData = [
-    { name: 'Jan', value: 400 },
-    { name: 'Feb', value: 600 },
-    { name: 'Mar', value: 350 },
-    { name: 'Apr', value: 800 },
-    { name: 'May', value: 500 },
-    { name: 'Jun', value: 700 },
-  ];
 
-  const pieData = [
-    { name: 'Office', value: 40, color: '#3b82f6' },
-    { name: 'Industrial', value: 30, color: '#10b981' },
-    { name: 'Tech', value: 20, color: '#8b5cf6' },
-    { name: 'Other', value: 10, color: '#64748b' },
-  ];
-
-  const recentActivity = [
-    { id: '#REQ-1024', user: 'John Doe', item: 'MacBook Pro M3', date: 'Oct 24, 2023', status: 'Pending', avatar: 'https://picsum.photos/seed/john/40/40' },
-    { id: '#REQ-1023', user: 'Sarah Smith', item: 'Ergonomic Chair', date: 'Oct 23, 2023', status: 'Approved', avatar: 'https://picsum.photos/seed/sarah/40/40' },
-    { id: '#REQ-1022', user: 'Michael Brown', item: '24" Monitor x2', date: 'Oct 22, 2023', status: 'Approved', avatar: 'https://picsum.photos/seed/mike/40/40' },
-    { id: '#REQ-1021', user: 'David Lee', item: 'Office Supplies Kit', date: 'Oct 21, 2023', status: 'Rejected', avatar: 'https://picsum.photos/seed/david/40/40' },
-  ];
+  const totalPieValue = pieData.reduce((acc, entry) => acc + entry.value, 0);
 
   return (
     <div className="max-w-[1280px] mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
@@ -181,7 +194,7 @@ const Dashboard: React.FC = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-bold text-white">562</span>
+              <span className={`${totalPieValue > 99999 ? 'text-3x2' : 'text-3xl'} font-bold text-white`}>{totalPieValue}</span>
               <span className="text-xs text-dark-muted uppercase tracking-widest mt-1">Items</span>
             </div>
           </div>
@@ -191,7 +204,7 @@ const Dashboard: React.FC = () => {
                 <div className="size-2.5 rounded-full" style={{ backgroundColor: item.color }}></div>
                 <div className="flex flex-col">
                   <span className="text-xs font-medium text-white">{item.name}</span>
-                  <span className="text-[10px] text-dark-muted">{item.value}%</span>
+                  <span className="text-[10px] text-dark-muted">{item.value}</span>
                 </div>
               </div>
             ))}
@@ -222,7 +235,7 @@ const Dashboard: React.FC = () => {
               <tbody className="text-sm divide-y divide-dark-border">
                 {recentActivity.map((req, idx) => (
                   <tr key={idx} className="group hover:bg-slate-800/50 transition-colors">
-                    <td className="py-4 px-6 text-primary font-mono font-medium">{req.id}</td>
+                    <td className="py-4 px-6 text-primary font-mono font-medium text-nowrap">{req.id}</td>
                     <td className="py-4 px-6 text-white">
                       <div className="flex items-center gap-3">
                         <img src={req.avatar} className="size-8 rounded-full" alt={req.user} />

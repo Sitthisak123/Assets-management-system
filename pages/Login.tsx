@@ -4,13 +4,16 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../src/services/authService';
 import { Grid, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
-const Login: React.FC = () => {
+interface LoginProps {
+  onLoginSuccess: () => void;
+}
+
+const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +21,7 @@ const Login: React.FC = () => {
     setError(null);
     try {
       await authService.login({ email, password });
-      navigate('/');
+      onLoginSuccess();
     } catch (error: any) {
       setError(error.response?.data?.message || error.message);
     } finally {

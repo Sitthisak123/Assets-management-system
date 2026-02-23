@@ -101,7 +101,7 @@ const Requisitions: React.FC = () => {
               {requisitions.map((req) => {
                 const status = getStatusInfo(req.status);
                 return (
-                <tr key={req.id} className="hover:bg-white/5 transition-colors group">
+                <tr key={req.id} className="hover:bg-white/5 transition-colors group text-nowrap">
                   <td className="px-6 py-4 text-white text-sm font-medium tracking-wide font-mono">{req.ref_no}</td>
                   <td className="px-6 py-4 text-white text-sm font-medium">{req.subject}</td>
                   <td className="px-6 py-4 text-dark-muted text-sm">{new Date(req.created_at).toLocaleDateString()}</td>

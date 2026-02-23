@@ -4,6 +4,10 @@ const getPersonnel = () => {
   return apiClient.get('/personnel');
 };
 
+const getPersonnelCount = () => {
+  return apiClient.get(`/personnel/count`);
+}
+
 const getPersonnelById = (id: string) => {
   return apiClient.get(`/personnel/${id}`);
 };
@@ -22,6 +26,7 @@ const deletePersonnel = (id: string) => {
 
 export const personnelService = {
   getPersonnel,
+  getPersonnelCount,
   getPersonnelById,
   createPersonnel,
   updatePersonnel,
