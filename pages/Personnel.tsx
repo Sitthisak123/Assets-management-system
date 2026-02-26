@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import Breadcrumb from '../components/Breadcrumb';
+
 const Personnel: React.FC = () => {
   // Note: Ensure your PersonnelType interface in personnelService is updated 
   // to match the new flat Users structure (id, fullname, position, email, title, role, status).
@@ -54,11 +56,7 @@ const Personnel: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
-        <nav className="flex items-center text-sm font-medium">
-          <Link to="/" className="text-dark-muted hover:text-primary transition-colors">Home</Link>
-          <ChevronRight size={16} className="text-slate-400 mx-2" />
-          <span className="text-white bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded text-xs tracking-wide uppercase">Personnel</span>
-        </nav>
+        <Breadcrumb />
         <Link to="/personnel/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
           <Plus size={20} />
           <span>Add Employee</span>

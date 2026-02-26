@@ -9,12 +9,12 @@ import {
   Calendar, 
   Camera, 
   Save, 
-  X, 
   Plus,
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { personnelService } from '../src/services/personnelService';
+import Breadcrumb from '../components/Breadcrumb';
 
 const CreatePersonnel: React.FC = () => {
   const navigate = useNavigate();
@@ -54,13 +54,7 @@ const CreatePersonnel: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-6">
-        <nav className="flex items-center text-sm text-dark-muted">
-          <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Dashboard</button>
-          <span className="mx-2">/</span>
-          <button onClick={() => navigate('/personnel')} className="hover:text-primary transition-colors">Personnel</button>
-          <span className="mx-2">/</span>
-          <span className="text-white font-medium">Create</span>
-        </nav>
+        <Breadcrumb />
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Create Personnel</h1>
           <p className="text-dark-muted text-base max-w-3xl">Add a new employee to the organization directory. Please ensure all required fields marked with <span className="text-primary">*</span> are completed.</p>
@@ -119,12 +113,13 @@ const CreatePersonnel: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary"></span></label>
+                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <input
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    required
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" 
                   />
                 </div>
@@ -170,16 +165,9 @@ const CreatePersonnel: React.FC = () => {
                     disabled
                     className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-not-allowed appearance-none"
                   >
-                    <option value={-1}>Personnel</option>
+                    <option value={-1}>Personnel Role</option>
                   </select>
                   <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Start Date</label>
-                <div className="relative">
-                  <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted pointer-events-none" size={18} />
-                  <input type="date" className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
               </div>
             </div>

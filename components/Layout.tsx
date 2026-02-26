@@ -11,6 +11,7 @@ const Layout: React.FC = () => {
   const pageTitle = location.pathname.split('/')[1];
   const capitalizedTitle = pageTitle.charAt(0).toUpperCase() + pageTitle.slice(1);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleLogout = () => {
     authService.logout();
@@ -69,8 +70,12 @@ const Layout: React.FC = () => {
                   </div>
                   <ChevronDown size={16} className="text-dark-muted hidden sm:block group-hover:text-white transition-colors" />
                 </button>
-                {isDropdownOpen && (
-                  <div className="absolute top-full right-0 mt-2 w-48 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1">
+                {(isDropdownOpen||isLogoutModalOpen) && (
+                  <div 
+                  className="absolute top-full right-0 mt-2 w-48 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1"
+                  onMouseEnter={() => setIsLogoutModalOpen(true)}
+                  onMouseLeave={() => setIsLogoutModalOpen(false)}
+                >
                     <button 
                       onClick={handleLogout}
                       className="flex items-center gap-3 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full"

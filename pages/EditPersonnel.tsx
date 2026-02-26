@@ -4,7 +4,6 @@ import {
   Mail, 
   Lock,
   BadgeCheck, 
-  Calendar, 
   Save, 
   AlertCircle,
   Loader,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { personnelService } from '../src/services/personnelService';
+import Breadcrumb from '../components/Breadcrumb';
 
 const EditPersonnel: React.FC = () => {
   const navigate = useNavigate();
@@ -140,13 +140,7 @@ const EditPersonnel: React.FC = () => {
   return (
     <div className="max-w-5xl mx-auto flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-6">
-        <nav className="flex items-center text-sm text-dark-muted">
-          <button onClick={() => navigate('/')} className="hover:text-primary transition-colors">Dashboard</button>
-          <span className="mx-2">/</span>
-          <button onClick={() => navigate('/personnel')} className="hover:text-primary transition-colors">Personnel</button>
-          <span className="mx-2">/</span>
-          <span className="text-white font-medium">Edit</span>
-        </nav>
+        <Breadcrumb />
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Edit Personnel</h1>
           <p className="text-dark-muted text-base max-w-3xl">Update the employee's information in the organization directory.</p>
@@ -205,7 +199,7 @@ const EditPersonnel: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <input
