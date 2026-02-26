@@ -38,7 +38,7 @@ const UserProfile: React.FC = () => {
         
         setProfile(data);
         setUsername(data.username || '');
-        setTitle(data.title || '');
+        setTitle(data.display_name || '');
         setFullname(data.fullname || '');
         setPosition(data.position || '');
       } catch (err: any) {
@@ -121,7 +121,7 @@ const UserProfile: React.FC = () => {
               </div>
               <div className="flex flex-col">
                 <h3 className="text-white text-xl font-bold">{profile?.fullname || profile?.username}</h3>
-                <p className="text-dark-muted text-sm">{profile?.position} • {profile?.title}</p>
+                <p className="text-dark-muted text-sm">{profile?.position} • {profile?.display_name}</p>
                 <div className="mt-2 flex items-center gap-2">
                   <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${getStatusInfo(profile?.status).className}`}>
                     {getStatusInfo(profile?.status).text}

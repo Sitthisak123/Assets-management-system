@@ -162,7 +162,7 @@ const Personnel: React.FC = () => {
                       <img src={`https://picsum.photos/seed/${emp.id}/100/100`} className="h-10 w-10 rounded-full object-cover border-2 border-white/10" alt={emp.fullname} />
                       <div>
                         <div className="font-medium text-white">{emp.fullname}</div>
-                        <div className="text-xs text-dark-muted">{emp.title || 'N/A'}</div>
+                        <div className="text-xs text-dark-muted">{emp.display_name || 'N/A'}</div>
                       </div>
                     </div>
                   </td>
