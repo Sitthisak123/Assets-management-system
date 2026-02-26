@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { 
   User, 
   Mail, 
-  Phone, 
+  Lock,
   MapPin, 
   BadgeCheck, 
   Calendar, 
@@ -14,11 +14,15 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { personnelService } from '../src/services/personnelService';
 
 const CreatePersonnel: React.FC = () => {
   const navigate = useNavigate();
   const [fullname, setFullname] = useState('');
+  const [email, setEmail] = useState('');
   const [position, setPosition] = useState('');
+  const role = -1; // Locked to "personnel role"
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,15 +31,22 @@ const CreatePersonnel: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase
-      .from('personnel')
-      .insert([{ fullname, position }]);
+    const personnelData = {
+      fullname,
+      username: email, // Use email as username
+      email,
+      position,
+      role,
+      status: 0, // Default status to Active
+      display_name: fullname,
+    };
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+    try {
+      await personnelService.createPersonnel(personnelData);
       navigate('/personnel');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create personnel.');
+      setLoading(false);
     }
   };
 
@@ -108,24 +119,21 @@ const CreatePersonnel: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary"></span></label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" disabled />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Phone Number</label>
-                <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <input className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="+1 (555) 000-0000" disabled />
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" 
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Office Location</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <select className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer" disabled>
+                  <select className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
                     <option value="">Select an office</option>
                     <option value="ny">New York (HQ)</option>
                     <option value="lon">London</option>
@@ -146,15 +154,6 @@ const CreatePersonnel: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Department <span className="text-primary">*</span></label>
-                <select className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer" disabled>
-                  <option value="">Select department</option>
-                  <option value="eng">Engineering</option>
-                  <option value="design">Design</option>
-                  <option value="marketing">Marketing</option>
-                </select>
-              </div>
-              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
                 <input 
                   value={position}
@@ -164,10 +163,23 @@ const CreatePersonnel: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Role</label>
+                <div className="relative">
+                  <select
+                    value={role}
+                    disabled
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-not-allowed appearance-none"
+                  >
+                    <option value={-1}>Personnel</option>
+                  </select>
+                  <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                </div>
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Start Date</label>
                 <div className="relative">
                   <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted pointer-events-none" size={18} />
-                  <input type="date" className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" disabled />
+                  <input type="date" className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary" />
                 </div>
               </div>
             </div>

@@ -44,16 +44,7 @@ const Personnel: React.FC = () => {
     }
   };
   
-  const handleDelete = async (personnelId: number) => {
-    if (window.confirm('Are you sure you want to delete this personnel?')) {
-      try {
-        await personnelService.deletePersonnel(personnelId);
-        setPersonnel(personnel.filter(p => p.id !== personnelId));
-      } catch (err: any) {
-        setError(err.message || 'Failed to delete personnel');
-      }
-    }
-  };
+
 
   const totalEmployees = personnel.length;
   // FIX: Access status directly on the personnel object
@@ -85,7 +76,7 @@ const Personnel: React.FC = () => {
               <Users className="text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-muted">Total Employees</p>
+              <p className="text-sm text-dark-muted">Total</p>
               <p className="text-2xl font-bold text-white">{loading ? '...' : totalEmployees}</p>
             </div>
           </div>
@@ -182,7 +173,6 @@ const Personnel: React.FC = () => {
                   <td className="py-4 px-6 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                       <Link to={`/personnel/edit/${emp.id}`} className="p-1.5 text-dark-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"><Edit2 size={18} /></Link>
-                      <button onClick={() => handleDelete(emp.id)} className="p-1.5 text-dark-muted hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"><Archive size={18} /></button>
                     </div>
                   </td>
                 </tr>

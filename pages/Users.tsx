@@ -39,6 +39,7 @@ const Users: React.FC = () => {
     switch (role) {
       case 1: return { name: 'Administrator', access: 'Full Access' };
       case 0: return { name: 'User', access: 'Standard Access' };
+      case -1: return { name: 'Personnel', access: 'N/A' };
       default: return { name: 'Unknown', access: 'N/A' };
     }
   };

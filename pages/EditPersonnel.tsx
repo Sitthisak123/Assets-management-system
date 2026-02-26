@@ -2,24 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Mail, 
-  Phone, 
-  MapPin, 
+  Lock,
   BadgeCheck, 
   Calendar, 
-  Camera, 
   Save, 
-  X, 
-  Plus,
   AlertCircle,
-  Loader
+  Loader,
+  Archive
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { personnelService } from '../src/services/personnelService';
 
 const EditPersonnel: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+
   const [fullname, setFullname] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [position, setPosition] = useState('');
+  const [role, setRole] = useState(0);
+  const [status, setStatus] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,23 +37,48 @@ const EditPersonnel: React.FC = () => {
       }
 
       setLoading(true);
-      const { data, error } = await supabase
-        .from('personnel')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        setError(error.message);
-      } else if (data) {
-        setFullname(data.fullname);
-        setPosition(data.position);
+      try {
+        const response = await personnelService.getPersonnelById(id);
+        const data = response.data;
+        if (data) {
+          setFullname(data.fullname);
+          setUsername(data.username);
+          setEmail(data.email);
+          setPosition(data.position);
+          setRole(data.role);
+          setStatus(data.status);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch personnel data.');
       }
       setLoading(false);
     };
 
     fetchPersonnel();
   }, [id]);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const toggleDeleteModal = () => {
+    setIsDeleteModalOpen(!isDeleteModalOpen);
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+
+    setIsDeleting(true);
+    setError(null);
+
+    try {
+      await personnelService.deletePersonnel(id);
+      navigate('/personnel');
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete personnel.');
+      setIsDeleting(false);
+      toggleDeleteModal();
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,16 +87,26 @@ const EditPersonnel: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    const { error } = await supabase
-      .from('personnel')
-      .update({ fullname, position })
-      .eq('id', id);
+    const personnelData: any = {
+      fullname,
+      username,
+      email,
+      position,
+      role,
+      status,
+      display_name: fullname,
+    };
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+    if (password) {
+      personnelData.password = password;
+    }
+
+    try {
+      await personnelService.updatePersonnel(id, personnelData);
       navigate('/personnel');
+    } catch (err: any) {
+      setError(err.message || 'Failed to update personnel.');
+      setLoading(false);
     }
   };
 
@@ -120,6 +160,38 @@ const EditPersonnel: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <User size={18} />
               </div>
+              <h3 className="text-lg font-semibold text-white">Account Information</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Username <span className="text-primary">*</span></label>
+                <input 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <input 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    type="password"
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Leave blank to keep current password" 
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                <User size={18} />
+              </div>
               <h3 className="text-lg font-semibold text-white">Personal Information</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
@@ -129,35 +201,123 @@ const EditPersonnel: React.FC = () => {
                   value={fullname}
                   onChange={(e) => setFullname(e.target.value)}
                   required
-                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Sarah Connor" 
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
               </div>
-               <div className="space-y-2">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
+                <BadgeCheck size={18} />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Role & Responsibilities</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
                 <input 
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   required
-                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Senior Frontend Engineer" 
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Role <span className="text-primary">*</span></label>
+                <select 
+                  value={role}
+                  onChange={(e) => setRole(parseInt(e.target.value))}
+                  required
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer">
+                  <option value={0}>User</option>
+                  <option value={1}>Admin</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Status <span className="text-primary">*</span></label>
+                <select 
+                  value={status}
+                  onChange={(e) => setStatus(parseInt(e.target.value))}
+                  required
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer">
+                  <option value={0}>Inactive</option>
+                  <option value={1}>Active</option>
+                  <option value={-1}>Suspended</option>
+                </select>
               </div>
             </div>
           </section>
         </div>
 
-        <div className="bg-slate-950/50 p-6 md:px-8 flex flex-col-reverse sm:flex-row items-center justify-end gap-3 border-t border-dark-border">
-          <button 
-            type="button" 
-            onClick={() => navigate('/personnel')}
-            className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
-          >
-            Cancel
-          </button>
-          <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-            {loading ? 'Saving...' : <><Save size={18} /><span>Save Changes</span></>}
-          </button>
+        <div className="bg-slate-950/50 p-6 md:px-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-3 border-t border-dark-border">
+          <div>
+            <button
+              type="button"
+              onClick={toggleDeleteModal}
+              className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 transition-all rounded-lg"
+            >
+              Delete Personnel
+            </button>
+          </div>
+          <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 w-full sm:w-auto">
+            <button 
+              type="button" 
+              onClick={() => navigate('/personnel')}
+              className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
+            >
+              Cancel
+            </button>
+            <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              {loading ? 'Saving...' : <><Save size={18} /><span>Save Changes</span></>}
+            </button>
+          </div>
         </div>
       </form>
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 animate-in fade-in">
+          <div className="bg-dark-surface rounded-2xl border border-dark-border shadow-2xl p-8 max-w-md w-full m-4">
+            <div className="flex flex-col items-center text-center">
+              <div className="p-3 bg-red-500/10 rounded-full border-4 border-red-500/20 mb-4">
+                <Archive size={32} className="text-red-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Confirm Deletion</h2>
+              <p className="text-dark-muted mt-2">
+                Are you sure you want to delete this personnel record? This action cannot be undone.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-8">
+              <button
+                onClick={toggleDeleteModal}
+                disabled={isDeleting}
+                className="px-6 py-3 text-sm font-medium text-dark-muted hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-6 py-3 text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
