@@ -21,7 +21,7 @@ const CreatePersonnel: React.FC = () => {
   const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
   const [position, setPosition] = useState('');
-  const role = -1; // Locked to "personnel role"
+  const role = -1; // Default role for new personnel, can be updated later by admin
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +33,9 @@ const CreatePersonnel: React.FC = () => {
 
     const personnelData = {
       fullname,
-      username: email, // Use email as username
-      email,
+      email: email || undefined, // Make email optional in case it's not provided
       position,
       role,
-      status: 0, // Default status to Active
-      display_name: fullname,
     };
 
     try {
@@ -119,7 +116,6 @@ const CreatePersonnel: React.FC = () => {
                   <input
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" 
                   />
                 </div>

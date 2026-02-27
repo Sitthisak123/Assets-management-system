@@ -12,6 +12,8 @@ import Requisitions from './pages/Requisitions';
 import CreateRequisition from './pages/CreateRequisition';
 import EditRequisition from './pages/EditRequisition';
 import Materials from './pages/Materials';
+import CreateMaterial from './pages/CreateMaterial';
+import EditMaterial from './pages/EditMaterial';
 import Users from './pages/Users';
 import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
@@ -47,6 +49,8 @@ const App: React.FC = () => {
             <Route path="/requisitions/create" element={<CreateRequisition />} />
             <Route path="/requisitions/edit/:id" element={<EditRequisition />} />
             <Route path="/materials" element={<Materials />} />
+            <Route path="/materials/create" element={<CreateMaterial />} />
+            <Route path="/materials/edit/:id" element={<EditMaterial />} />
             <Route path="/users" element={<Users />} />
             <Route path="/settings" element={<UserProfile />} />
             <Route path="*" element={<NotFound />} />

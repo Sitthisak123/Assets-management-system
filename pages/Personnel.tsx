@@ -59,7 +59,7 @@ const Personnel: React.FC = () => {
         <Breadcrumb />
         <Link to="/personnel/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
           <Plus size={20} />
-          <span>Add Employee</span>
+          <span>Personnel</span>
         </Link>
       </div>
 

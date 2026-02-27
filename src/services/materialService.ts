@@ -57,14 +57,6 @@ const getInventoryDistribution = (): Promise<any[]> => {
   });
 };
 
-const getInventoryValue = (): Promise<number> => { // awaiting real API implementation
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(45200);
-    }, 500);
-  });
-};
-
 const getMaterials = () => {
   return apiClient.get('/materials');
 };
@@ -81,13 +73,31 @@ const deleteMaterial = (id: string) => {
   return apiClient.delete(`/materials/${id}`);
 };
 
+const getMaterialTypes = () => {
+  return apiClient.get('/material-types');
+};
+
+const createMaterialType = (data: any) => {
+  return apiClient.post('/material-types', data);
+};
+
+const getInventoryValue = (): Promise<number> => { // awaiting real API implementation
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(45200);
+    }, 500);
+  });
+};
+
 export const materialService = {
   getAll,
+  getInventoryValue,
   getMaterials,
   getMaterialById,
   createMaterial,
   updateMaterial,
   deleteMaterial,
-  getInventoryValue,
   getInventoryDistribution,
+  getMaterialTypes,
+  createMaterialType,
 };

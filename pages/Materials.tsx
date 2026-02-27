@@ -1,8 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { materialService, Material as MaterialType } from '../src/services/materialService';
-import { Search, Filter, Plus, Edit2, MoreVertical, Download, Printer, Box, Loader } from 'lucide-react';
+import { 
+  Search, 
+  Plus, 
+  Edit2, 
+  ChevronRight, 
+  Box,
+  Loader
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Breadcrumb from '../components/Breadcrumb';
 
 const Materials: React.FC = () => {
   const [materials, setMaterials] = useState<MaterialType[]>([]);
@@ -20,143 +27,152 @@ const Materials: React.FC = () => {
       }
       setLoading(false);
     };
-    
+
     fetchMaterials();
   }, []);
 
   const getStatusInfo = (quantity: number) => {
-    if (quantity === 0) return { text: 'Out of Stock', className: 'bg-red-500/10 text-red-400' };
-    if (quantity < 20) return { text: 'Low Stock', className: 'bg-orange-500/10 text-orange-400' };
-    return { text: 'In Stock', className: 'bg-emerald-500/10 text-emerald-400' };
+    if (quantity === 0) return { text: 'Out of Stock', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+    if (quantity < 20) return { text: 'Low Stock', className: 'bg-orange-500/10 text-orange-400 border-orange-500/20' };
+    return { text: 'In Stock', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
   };
 
   const totalSKUs = materials.length;
   const lowStockCount = materials.filter(m => m.quantity > 0 && m.quantity < 20).length;
-  // Assuming no price field in the schema to calculate total value for now.
-  const totalValue = 'N/A';
+  const outOfStock = materials.filter(m => m.quantity === 0).length;
 
   return (
-    <div className="max-w-7xl mx-auto flex flex-col gap-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-dark-border/50">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-white text-3xl md:text-4xl font-extrabold tracking-tight">Material Directory</h2>
-          <p className="text-dark-muted text-base font-normal max-w-2xl">View and manage inventory items, stock levels, and procurement needs across all departments.</p>
-        </div>
-        <button className="flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-primary-dark transition-all h-11 px-6 text-white text-sm font-bold shadow-lg shadow-blue-500/20 ring-1 ring-white/10">
-          <Plus size={18} />
-          <span>New Material</span>
-        </button>
+    <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <Breadcrumb />
+        <Link to="/materials/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
+          <Plus size={20} />
+          <span>Material</span>
+        </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        <div className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
-            <div className="flex items-center justify-between">
-              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">Total SKUs</p>
-              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-blue-500"><Box size={20} /></div>
-            </div>
-            <p className="text-white text-3xl font-bold tracking-tight">{loading ? '...' : totalSKUs}</p>
+      <div className="flex flex-col gap-2">
+        <h2 className="text-3xl font-bold text-white tracking-tight">Material Directory</h2>
+        <p className="text-dark-muted text-sm max-w-2xl">Manage your inventory items, stock levels, and procurement needs efficiently.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+            <Box className="text-blue-600" />
+          </div>
+          <div>
+            <p className="text-sm text-dark-muted">Total SKUs</p>
+            <p className="text-2xl font-bold text-white">{loading ? '...' : totalSKUs}</p>
+          </div>
         </div>
-        <div className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
-            <div className="flex items-center justify-between">
-              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">Low Stock Alerts</p>
-              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-orange-500"><Box size={20} /></div>
-            </div>
-            <p className="text-white text-3xl font-bold tracking-tight">{loading ? '...' : lowStockCount}</p>
+        <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-orange-500/10 flex items-center justify-center">
+            <Box className="text-orange-600" />
+          </div>
+          <div>
+            <p className="text-sm text-dark-muted">Low Stock</p>
+            <p className="text-2xl font-bold text-white">{loading ? '...' : lowStockCount}</p>
+          </div>
         </div>
-        <div className="group flex flex-col gap-3 rounded-xl p-6 border border-dark-border bg-dark-surface hover:border-primary/50 transition-all">
-            <div className="flex items-center justify-between">
-              <p className="text-dark-muted text-sm font-medium uppercase tracking-wider">Total Value</p>
-              <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-emerald-500"><Box size={20} /></div>
-            </div>
-            <p className="text-white text-3xl font-bold tracking-tight">{loading ? '...' : totalValue}</p>
+        <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center">
+            <Box className="text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm text-dark-muted">Out of Stock</p>
+            <p className="text-2xl font-bold text-white">{loading ? '...' : outOfStock}</p>
+          </div>
         </div>
       </div>
 
-      <div className="bg-dark-surface rounded-xl border border-dark-border overflow-hidden shadow-xl">
-        <div className="flex flex-col md:flex-row justify-between gap-4 p-5 border-b border-dark-border">
-          <div className="flex flex-1 items-center gap-3">
-            <div className="relative flex-1 max-w-md group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted group-focus-within:text-primary transition-colors" size={18} />
-              <input 
-                className="w-full h-11 pl-10 pr-4 rounded-lg bg-slate-900 border border-dark-border text-white placeholder-dark-muted focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-all" 
-                placeholder="Search by SKU or Name..." 
-              />
-            </div>
-            <button className="flex items-center justify-center h-11 w-11 rounded-lg border border-dark-border bg-slate-900 text-dark-muted hover:text-white transition-colors">
-              <Filter size={18} />
-            </button>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 h-11 px-4 rounded-lg border border-dark-border bg-slate-900 text-dark-muted text-sm font-medium hover:text-white transition-colors">
-              <Download size={18} />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-            <button className="flex items-center gap-2 h-11 px-4 rounded-lg border border-dark-border bg-slate-900 text-dark-muted text-sm font-medium hover:text-white transition-colors">
-              <Printer size={18} />
-              <span className="hidden sm:inline">Print</span>
-            </button>
-          </div>
+      <div className="bg-dark-surface p-4 rounded-xl shadow-sm border border-dark-border flex flex-col md:flex-row gap-4 items-center justify-between sticky top-0 z-10 backdrop-blur-xl bg-dark-surface/95">
+        <div className="relative w-full md:w-96 group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted group-focus-within:text-primary transition-colors" size={20} />
+          <input 
+            className="w-full bg-slate-900/50 border border-dark-border text-white text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10 py-2.5 placeholder:text-dark-muted transition-all" 
+            placeholder="Search by name, SKU, or category..." 
+          />
         </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-dark-border rounded-lg hover:border-primary/50 transition-all text-sm font-medium text-slate-300">
+            <span>Category</span>
+            <ChevronRight size={14} className="rotate-90" />
+          </button>
+        </div>
+      </div>
 
+      <div className="bg-dark-surface border border-dark-border rounded-xl shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           {loading ? (
-             <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={40} /></div>
+            <div className="flex justify-center items-center h-64">
+              <Loader className="animate-spin text-primary" size={40} />
+            </div>
           ) : error ? (
-            <div className="text-red-500 p-6">Error: {error}</div>
+            <div className="flex justify-center items-center h-64 text-red-500">
+              Error: {error}
+            </div>
           ) : (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-800/30 border-b border-dark-border">
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted w-14">
-                  <input type="checkbox" className="rounded border-slate-600 bg-slate-900 text-primary h-4 w-4" />
-                </th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">Item Details</th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">Category</th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted text-right">Qty</th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted">Status</th>
-                <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-dark-muted w-20 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-dark-border">
-              {materials.map((m) => (
-                <tr key={m.id} className="group hover:bg-slate-800/20 transition-colors">
-                  <td className="py-4 px-6">
-                    <input type="checkbox" className="rounded border-slate-600 bg-slate-900 text-primary h-4 w-4" />
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center gap-4">
-                      <div className="h-11 w-11 rounded-lg bg-slate-800 flex items-center justify-center text-dark-muted">
-                        <Box size={20} />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-white text-sm font-semibold group-hover:text-primary transition-colors cursor-pointer">{m.title}</span>
-                        <span className="text-slate-500 text-xs font-mono">SKU-{m.id}</span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className="inline-flex items-center rounded-md bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-400 ring-1 ring-inset ring-blue-500/20">
-                    {m.material_type?.title || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-right text-slate-200 text-sm font-medium">{m.quantity} {m.unit}</td>
-                  <td className="py-4 px-6">
-                     <div className={`flex items-center gap-2 px-2.5 py-1 rounded-full w-fit border ${getStatusInfo(m.quantity).className.replace('bg-', 'border-')}`}>
-                      <div className={`h-1.5 w-1.5 rounded-full ${getStatusInfo(m.quantity).className.replace('text-', 'bg-')}`}></div>
-                      <span className={`${getStatusInfo(m.quantity).className.split(' ')[1]}`}>{getStatusInfo(m.quantity).text}</span>
-                    </div>
-                  </td>
-                  <td className="py-4 px-6 text-center">
-                    <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button className="text-dark-muted hover:text-white p-1.5 rounded-md transition-colors"><Edit2 size={16} /></button>
-                      <button className="text-dark-muted hover:text-white p-1.5 rounded-md transition-colors"><MoreVertical size={16} /></button>
-                    </div>
-                  </td>
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-900/40 border-b border-dark-border">
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider w-16">#</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Material</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Category</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Unit</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Quantity</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Status</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-dark-border">
+                {materials.map((material) => (
+                  <tr key={material.id} className="hover:bg-slate-800/40 transition-colors group">
+                    <td className="py-4 px-6 text-sm text-dark-muted font-mono">{material.id}</td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-slate-800 flex items-center justify-center text-dark-muted">
+                          <Box size={20} />
+                        </div>
+                        <div>
+                          <div className="font-medium text-white">{material.title}</div>
+                          <div className="text-xs text-dark-muted">SKU-{material.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        {material.material_type?.title || 'N/A'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="text-sm text-white">{material.unit}</div>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="text-sm text-slate-300 font-medium">{material.quantity}</div>
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusInfo(material.quantity).className}`}>
+                        {getStatusInfo(material.quantity).text}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <Link to={`/materials/edit/${material.id}`} className="p-1.5 text-dark-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"><Edit2 size={18} /></Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
+        </div>
+        <div className="bg-dark-surface px-6 py-4 border-t border-dark-border flex items-center justify-between">
+          <p className="text-sm text-dark-muted">Showing <span className="font-medium text-white">1</span> to <span className="font-medium text-white">{materials.length}</span> of <span className="font-medium text-white">{materials.length}</span> results</p>
+          <div className="flex items-center gap-2">
+            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 disabled:opacity-50 transition-colors" disabled>Previous</button>
+            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 transition-colors">Next</button>
+          </div>
         </div>
       </div>
     </div>

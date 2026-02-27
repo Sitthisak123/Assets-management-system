@@ -70,9 +70,9 @@ const Layout: React.FC = () => {
                   </div>
                   <ChevronDown size={16} className="text-dark-muted hidden sm:block group-hover:text-white transition-colors" />
                 </button>
-                {(isDropdownOpen||isLogoutModalOpen) && (
+                {(isDropdownOpen || isLogoutModalOpen) && (
                   <div 
-                  className="absolute top-full right-0 mt-2 w-48 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1"
+                  className="absolute top-full right-0 mt-0 w-48 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1"
                   onMouseEnter={() => setIsLogoutModalOpen(true)}
                   onMouseLeave={() => setIsLogoutModalOpen(false)}
                 >
