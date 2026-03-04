@@ -80,7 +80,7 @@ const Requisitions: React.FC = () => {
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Subject</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Date Created</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Requester</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Owner (Receiver)</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Authorizer</th>
                 <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Items</th>
                 <th className="px-6 py-4 text-center text-dark-muted text-xs font-semibold uppercase tracking-wider">Status</th>
                 <th className="px-6 py-4 text-right text-dark-muted text-xs font-semibold uppercase tracking-wider">Actions</th>
@@ -95,12 +95,14 @@ const Requisitions: React.FC = () => {
                   <td className="px-6 py-4 text-white text-sm font-medium">{req.subject}</td>
                   <td className="px-6 py-4 text-dark-muted text-sm">{new Date(req.created_at).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-dark-muted text-sm">
-                    <div className="flex flex-col">
-                      <span className="text-white">{req.creator.fullname}</span>
-                      <span className="text-xs opacity-70">{req.creator.position}</span>
+                    <div className="flex flex-col">   
+                      <span className="text-white">{req.owner.fullname}</span>
+                      <span className="text-xs opacity-70">{req.owner.position}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-dark-muted text-sm">{req.owner.fullname}</td>
+                  <td className={`px-6 py-4 text-dark-muted text-sm ${req.authorizer?.fullname ? '' : 'text-red-400 text-opacity-60'}`}>
+                    {req.authorizer?.fullname || '<Unassigned>'}
+                    </td>
                   <td className="px-6 py-4 text-dark-muted text-sm">{req.mr_form_materials?.length || 0} items</td>
                   <td className="px-6 py-4 text-center">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${status.className}`}>

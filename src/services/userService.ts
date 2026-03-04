@@ -17,7 +17,7 @@ export interface User {
 // Service object
 export const userService = {
   // Create a new user
-  createUser: (data: { fullname: string; email: string; position: string; role: number; status: number }) => {
+  createUser: (data: { fullname: string; username: string; display_name?: string; email: string; position?: string; role: number; status: number }) => {
     return apiClient.post<User>('/users', data);
   },
 

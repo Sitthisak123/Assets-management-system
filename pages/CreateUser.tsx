@@ -17,6 +17,8 @@ import Breadcrumb from '../components/Breadcrumb';
 const CreateUser: React.FC = () => {
   const navigate = useNavigate();
   const [fullname, setFullname] = useState('');
+  const [username, setUsername] = useState('');
+  const [display_name, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [position, setPosition] = useState('');
   const [role, setRole] = useState<number>(0); // Default to 0 (admin/user)
@@ -32,6 +34,8 @@ const CreateUser: React.FC = () => {
 
     const userData = {
       fullname,
+      username,
+      display_name,
       email,
       position,
       role,
@@ -111,6 +115,25 @@ const CreateUser: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Username <span className="text-primary">*</span></label>
+                <input 
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
+                  placeholder="e.g. sarah_connor" 
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Display Name</label>
+                <input 
+                  value={display_name}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
+                  placeholder="e.g. Sarah" 
+                />
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
@@ -124,7 +147,7 @@ const CreateUser: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium text-gray-300">Position</label>
                 <input 
                   value={position}

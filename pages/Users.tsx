@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { userService } from '../src/services/userService';
-import { Profile } from '../types';
+import { User } from '../src/services/userService';
 import { Link } from 'react-router-dom';
 import { 
   Search, 
@@ -17,24 +16,72 @@ import {
 } from 'lucide-react';
 
 const Users: React.FC = () => {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profiles, setProfiles] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  const fetchUsers = async (role?: string, status?: string) => {
+    setLoading(true);
+    try {
+      let query = `{
+        getUsers {
+          id
+          fullname
+          username
+          email
+          position
+          role
+          status
+          created_at
+          updated_at
+        }
+      }`;
+      
+      const response = await fetch('http://localhost:3000/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      });
+      
+      const data = await response.json();
+      if (data.errors) {
+        setError(data.errors[0].message);
+        setProfiles([]);
+      } else {
+        let users = data.data.getUsers || [];
+        
+        // Client-side filtering based on role and status
+        if (role && role !== 'all') {
+          users = users.filter((u: any) => u.role === parseInt(role));
+        }
+        
+        if (status && status !== 'all') {
+          users = users.filter((u: any) => u.status === parseInt(status));
+        }
+        
+        if (searchQuery) {
+          users = users.filter((u: any) => 
+            u.fullname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.username?.toLowerCase().includes(searchQuery.toLowerCase())
+          ) || [];
+        }
+        
+        setProfiles(users);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProfiles = async () => {
-      setLoading(true);
-      try {
-        const response = await userService.getUsers();
-        setProfiles(response.data);
-      } catch (error: any) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProfiles();
-  }, []);
+    fetchUsers(roleFilter, statusFilter);
+  }, [roleFilter, statusFilter, searchQuery]);
 
   const getRoleInfo = (role: number) => {
     switch (role) {
@@ -133,16 +180,32 @@ const Users: React.FC = () => {
         <div className="relative w-full lg:w-96 group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted group-focus-within:text-primary transition-colors" size={18} />
           <input 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-primary placeholder:text-slate-600 transition-all" 
             placeholder="Search by name, email or ID..." 
           />
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <select className="bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-3 pr-8 py-2.5 focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-            <option>All Roles</option>
+          <select 
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-3 pr-8 py-2.5 focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+          >
+            <option value="all">All Roles</option>
+            <option value="1">Administrator</option>
+            <option value="0">User</option>
+            <option value="-1">Personnel</option>
           </select>
-          <select className="bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-3 pr-8 py-2.5 focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-            <option>All Status</option>
+          <select 
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-3 pr-8 py-2.5 focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+          >
+            <option value="all">All Status</option>
+            <option value="1">Active</option>
+            <option value="0">Inactive</option>
+            <option value="-1">Suspended</option>
           </select>
         </div>
       </div>
