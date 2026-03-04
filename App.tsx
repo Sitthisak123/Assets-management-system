@@ -16,6 +16,8 @@ import CreateMaterial from './pages/CreateMaterial';
 import EditMaterial from './pages/EditMaterial';
 import Users from './pages/Users';
 import CreateUser from './pages/CreateUser';
+import EditUser from './pages/EditUser';
+import ViewUser from './pages/ViewUser';
 import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
 
@@ -54,6 +56,8 @@ const App: React.FC = () => {
             <Route path="/materials/edit/:id" element={<EditMaterial />} />
             <Route path="/users" element={<Users />} />
             <Route path="/users/create" element={<CreateUser />} />
+            <Route path="/users/edit/:id" element={<EditUser />} />
+            <Route path="/users/view/:id" element={<ViewUser />} />
             <Route path="/settings" element={<UserProfile />} />
             <Route path="*" element={<NotFound />} />
           </Route>

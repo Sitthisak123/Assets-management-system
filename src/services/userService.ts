@@ -12,6 +12,8 @@ export interface User {
   status: number;
   created_at?: string;
   updated_at?: string;
+  created_by?: number;
+  created_by_user?: Partial<User>;
 }
 
 // Service object
@@ -28,6 +30,11 @@ export const userService = {
 
   // Get a single user by ID
   getUser: (id: number | string) => {
+    return apiClient.get<User>(`/users/${id}`);
+  },
+
+  // Alias for getUser
+  getUserById: (id: number | string) => {
     return apiClient.get<User>(`/users/${id}`);
   },
 

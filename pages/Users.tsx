@@ -12,7 +12,9 @@ import {
   Download, 
   Users as UsersIcon,
   ChevronRight,
-  Loader
+  Loader,
+  Edit2,
+  Eye
 } from 'lucide-react';
 
 const Users: React.FC = () => {
@@ -42,7 +44,7 @@ const Users: React.FC = () => {
       
       const response = await fetch('http://localhost:3000/graphql', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ query })
       });
       
@@ -257,7 +259,10 @@ const Users: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="p-2 rounded-lg hover:bg-slate-800 text-dark-muted hover:text-white transition-colors"><MoreHorizontal size={20} /></button>
+                    <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <Link to={`/users/view/${p.id}`} className="text-dark-muted hover:text-blue-400 p-1.5 rounded-md"><Eye size={16} /></Link>
+                      <Link to={`/users/edit/${p.id}`} className="text-dark-muted hover:text-white p-1.5 rounded-md"><Edit2 size={16} /></Link>
+                    </div>
                   </td>
                 </tr>
               ))}
