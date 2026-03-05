@@ -1,0 +1,13 @@
+.date-picker-input {
+  color-scheme: light;
+}
+
+.date-picker-input::-webkit-calendar-picker-indicator {
+  filter: invert(88%) sepia(7%) saturate(320%) hue-rotate(180deg) brightness(95%) contrast(92%);
+  opacity: 0.95;
+  cursor: pointer;
+}
+
+.date-picker-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}

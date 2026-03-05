@@ -3,6 +3,8 @@ import apiClient from './apiClient';
 export interface MaterialType {
   id: number;
   title: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Material {
@@ -12,6 +14,7 @@ export interface Material {
   unit: string;
   quantity: number;
   price: number; // Added price
+  minimum_threshold?: number | null;
   safety_stock?: number;
   created_at: string;
   updated_at: string;
@@ -81,6 +84,14 @@ const createMaterialType = (data: any) => {
   return apiClient.post('/material-types', data);
 };
 
+const updateMaterialType = (id: number | string, data: any) => {
+  return apiClient.put(`/material-types/${id}`, data);
+};
+
+const deleteMaterialType = (id: number | string) => {
+  return apiClient.delete(`/material-types/${id}`);
+};
+
 const getInventoryValue = (): Promise<number> => { // awaiting real API implementation
   return new Promise(resolve => {
     setTimeout(() => {
@@ -100,4 +111,6 @@ export const materialService = {
   getInventoryDistribution,
   getMaterialTypes,
   createMaterialType,
+  updateMaterialType,
+  deleteMaterialType,
 };

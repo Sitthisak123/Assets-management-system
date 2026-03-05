@@ -1,13 +1,16 @@
 import apiClient from './apiClient'; // Fixed import path
+import type { Workplace } from './workplaceService';
 
 // Define the User interface to ensure type safety across the app
 export interface User {
   id: number;
-  username: string;
-  email: string;
-  display_name: string;
+  username?: string | null;
+  email?: string | null;
+  display_name?: string | null;
   fullname: string;
   position: string;
+  workplace_id?: number | null;
+  workplace?: Workplace | null;
   role: number;
   status: number;
   created_at?: string;
@@ -19,7 +22,16 @@ export interface User {
 // Service object
 export const userService = {
   // Create a new user
-  createUser: (data: { fullname: string; username: string; display_name?: string; email: string; position?: string; role: number; status: number }) => {
+  createUser: (data: {
+    fullname: string;
+    username?: string;
+    display_name?: string;
+    email?: string;
+    position: string;
+    workplace_id?: number | null;
+    role: number;
+    status?: number;
+  }) => {
     return apiClient.post<User>('/users', data);
   },
 

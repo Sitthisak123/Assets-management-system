@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { userService, User } from '../src/services/userService';
-import { Loader, AlertCircle, User as UserIcon, Mail, BadgeCheck, Shield, KeyRound, Calendar, ArrowLeft } from 'lucide-react';
+import { Loader, AlertCircle, User as UserIcon, Mail, MapPin, BadgeCheck, Shield, KeyRound, Calendar, ArrowLeft } from 'lucide-react';
 
 const ViewUser: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +46,17 @@ const ViewUser: React.FC = () => {
       case -1: return { text: 'Suspended', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
       default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
     }
+  };
+
+  const getWorkplaceLabel = () => {
+    if (!user) return 'N/A';
+    if (user.workplace?.building || user.workplace?.room) {
+      return [user.workplace.building, user.workplace.room].filter(Boolean).join(' / ');
+    }
+    if (user.workplace_id) {
+      return `Workplace #${user.workplace_id}`;
+    }
+    return '<Not Set>';
   };
 
   if (loading) {
@@ -98,6 +109,10 @@ const ViewUser: React.FC = () => {
               <div className="flex justify-between">
                 <span className="text-dark-muted">Email</span>
                 <span className="text-white font-medium">{user.email || '<Not Set>'}</span>
+              </div>
+              <div className="flex justify-between items-center gap-3">
+                <span className="text-dark-muted inline-flex items-center gap-1"><MapPin size={14} /> Workplace</span>
+                <span className="text-white font-medium text-right">{getWorkplaceLabel()}</span>
               </div>
             </div>
           </div>

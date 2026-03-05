@@ -45,6 +45,16 @@ const Personnel: React.FC = () => {
       default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
     }
   };
+
+  const getWorkplaceLabel = (employee: PersonnelType) => {
+    if (employee.workplace?.building || employee.workplace?.room) {
+      return [employee.workplace.building, employee.workplace.room].filter(Boolean).join(' / ');
+    }
+    if (employee.workplace_id) {
+      return `Workplace #${employee.workplace_id}`;
+    }
+    return 'N/A';
+  };
   
 
 
@@ -136,6 +146,7 @@ const Personnel: React.FC = () => {
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Employee</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Contact</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Position</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Workplace</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Status</th>
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -162,6 +173,9 @@ const Personnel: React.FC = () => {
                   </td>
                   <td className="py-4 px-6">
                     <div className="text-sm text-white">{emp.position}</div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="text-sm text-slate-300">{getWorkplaceLabel(emp)}</div>
                   </td>
                   <td className="py-4 px-6">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusInfo(emp.status).className}`}>

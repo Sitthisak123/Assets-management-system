@@ -1,15 +1,19 @@
 import apiClient from './apiClient';
 import { jwtDecode } from 'jwt-decode';
+import type { Workplace } from './workplaceService';
 
 // --- Interfaces (Updated to match your new Schema) ---
 
 export interface User {
   id: number;
-  username: string;
-  title: string;
+  username?: string | null;
+  display_name?: string | null;
+  title?: string | null;
   fullname: string; // Moved from personnel
   position: string; // Moved from personnel
-  email: string;
+  email?: string | null;
+  workplace_id?: number | null;
+  workplace?: Workplace | null;
   role: number;
   status: number;
   created_at?: string;
@@ -23,12 +27,14 @@ export interface AuthResponse {
 
 // Register data must now include fullname and position
 export interface RegisterData {
-  username: string;
-  password: string;
-  email: string;
-  title: string;
+  username?: string;
+  password?: string;
+  email?: string;
+  display_name?: string;
+  title?: string;
   fullname: string; 
   position: string;
+  workplace_id?: number | null;
   role?: number;
   status?: number;
 }

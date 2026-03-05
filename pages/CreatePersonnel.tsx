@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   User, 
   Mail, 
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { personnelService } from '../src/services/personnelService';
+import { workplaceService, Workplace } from '../src/services/workplaceService';
 import Breadcrumb from '../components/Breadcrumb';
 
 const CreatePersonnel: React.FC = () => {
@@ -21,10 +22,39 @@ const CreatePersonnel: React.FC = () => {
   const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
   const [position, setPosition] = useState('');
+  const [workplaceId, setWorkplaceId] = useState<number | ''>('');
   const role = -1; // Default role for new personnel, can be updated later by admin
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [workplacesLoading, setWorkplacesLoading] = useState(true);
+  const [workplacesError, setWorkplacesError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchWorkplaces = async () => {
+      setWorkplacesLoading(true);
+      try {
+        const response = await workplaceService.getWorkplaces();
+        if (!mounted) return;
+        setWorkplaces(response.data || []);
+        setWorkplacesError(null);
+      } catch (err: any) {
+        if (!mounted) return;
+        setWorkplaces([]);
+        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+      } finally {
+        if (mounted) setWorkplacesLoading(false);
+      }
+    };
+
+    fetchWorkplaces();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +65,7 @@ const CreatePersonnel: React.FC = () => {
       fullname,
       email: email || undefined, // Make email optional in case it's not provided
       position,
+      workplace_id: workplaceId === '' ? null : workplaceId,
       role,
     };
 
@@ -121,17 +152,25 @@ const CreatePersonnel: React.FC = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Office Location</label>
+                <label className="text-sm font-medium text-gray-300">Workplace</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
-                  <select className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer">
-                    <option value="">Select an office</option>
-                    <option value="ny">New York (HQ)</option>
-                    <option value="lon">London</option>
-                    <option value="sf">San Francisco</option>
-                    <option value="remote">Remote</option>
+                  <select
+                    value={workplaceId}
+                    onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+                  >
+                    <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                    {workplaces.map((workplace) => (
+                      <option key={workplace.id} value={workplace.id}>
+                        {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                {workplacesError && (
+                  <p className="text-xs text-amber-400">{workplacesError}</p>
+                )}
               </div>
             </div>
           </section>

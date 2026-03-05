@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import { authService } from '../src/services/authService';
-import { Search, Bell, HelpCircle, ChevronDown, Menu, LogOut, Languages } from 'lucide-react';
+import { authService, type User as AuthUser } from '../src/services/authService';
+import { Search, Bell, HelpCircle, ChevronDown, Menu, LogOut, Languages, Mail, Briefcase, Building2 } from 'lucide-react';
 import { useLanguage } from '../src/contexts/LanguageContext';
 
 const Layout: React.FC = () => {
@@ -23,6 +23,120 @@ const Layout: React.FC = () => {
   const headerTitle = pageTitle ? t(currentTitleKey) : t('dashboard');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [profile, setProfile] = useState<AuthUser | null>(null);
+  const [tokenUser, setTokenUser] = useState(() => authService.getCurrentUser());
+
+  useEffect(() => {
+    let mounted = true;
+
+    const syncCurrentUser = async () => {
+      const currentUser = authService.getCurrentUser();
+      if (mounted) setTokenUser(currentUser);
+      if (!currentUser) return;
+
+      try {
+        const me = await authService.getProfile();
+        if (!mounted) return;
+        setProfile(me);
+      } catch {
+        // Keep token fallback data if profile endpoint is temporarily unavailable.
+      }
+    };
+
+    syncCurrentUser();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const roleInfo = useMemo(() => {
+    const role = profile?.role ?? tokenUser?.role ?? 0;
+    switch (role) {
+      case 1:
+        return { name: 'Administrator', access: 'Full Access' };
+      case 0:
+        return { name: 'User', access: 'Standard Access' };
+      case -1:
+        return { name: 'Personnel', access: 'N/A' };
+      default:
+        return { name: 'Unknown', access: 'N/A' };
+    }
+  }, [profile?.role, tokenUser?.role]);
+
+  const statusInfo = useMemo(() => {
+    const status = profile?.status ?? 1;
+    switch (status) {
+      case 1:
+        return {
+          text: 'Active',
+          className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+          dotClassName: 'bg-emerald-500 animate-pulse',
+        };
+      case 0:
+        return {
+          text: 'Inactive',
+          className: 'bg-slate-500/10 text-dark-muted border-dark-border',
+          dotClassName: 'bg-slate-500',
+        };
+      case -1:
+        return {
+          text: 'Suspended',
+          className: 'bg-red-500/10 text-red-500 border-red-500/20',
+          dotClassName: 'bg-red-500',
+        };
+      default:
+        return {
+          text: 'Unknown',
+          className: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
+          dotClassName: 'bg-gray-500',
+        };
+    }
+  }, [profile?.status]);
+
+  const roleAvatarColor = useMemo(() => {
+    const role = profile?.role ?? tokenUser?.role ?? 0;
+    switch (role) {
+      case 1:
+        return 'bg-gradient-to-br from-orange-600 to-purple-600';
+      case 0:
+        return 'bg-gradient-to-br from-blue-600 to-blue-400';
+      case -1:
+        return 'bg-gradient-to-br from-slate-600 to-slate-400';
+      default:
+        return 'bg-gradient-to-br from-gray-600 to-gray-400';
+    }
+  }, [profile?.role, tokenUser?.role]);
+
+  const displayName = useMemo(() => {
+    const fullName = profile?.fullname?.trim();
+    const display = profile?.display_name?.trim();
+    const username = profile?.username?.trim() || tokenUser?.username?.trim();
+    return fullName || display || username || t('admin_user');
+  }, [profile?.fullname, profile?.display_name, profile?.username, tokenUser?.username, t]);
+
+  const userHandle = useMemo(() => {
+    const username = profile?.username?.trim() || tokenUser?.username?.trim();
+    if (username) return `@${username}`;
+    if (profile?.email) return profile.email;
+    return roleInfo.access;
+  }, [profile?.username, tokenUser?.username, profile?.email, roleInfo.access]);
+
+  const userInitials = useMemo(() => {
+    const source = profile?.fullname || profile?.display_name || profile?.username || tokenUser?.username || '?';
+    const parts = source.trim().split(' ').filter(Boolean);
+    if (parts.length === 0) return '?';
+    return parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+  }, [profile?.fullname, profile?.display_name, profile?.username, tokenUser?.username]);
+
+  const workplaceLabel = useMemo(() => {
+    if (profile?.workplace?.building || profile?.workplace?.room) {
+      return [profile.workplace.building, profile.workplace.room].filter(Boolean).join(' / ');
+    }
+    if (profile?.workplace_id) {
+      return `Workplace #${profile.workplace_id}`;
+    }
+    return 'No workplace';
+  }, [profile?.workplace?.building, profile?.workplace?.room, profile?.workplace_id]);
 
   const handleLogout = () => {
     authService.logout();
@@ -67,26 +181,67 @@ const Layout: React.FC = () => {
                 onMouseEnter={() => setIsDropdownOpen(true)}
                 onMouseLeave={() => setIsDropdownOpen(false)}
               >
-                <button className="flex items-center gap-3 group">
+                <button className="flex items-center gap-3 group rounded-lg px-1.5 py-1 hover:bg-dark-surface transition-colors">
                   <div className="relative">
-                    <div 
-                      className="bg-center bg-no-repeat bg-cover rounded-full size-8 bg-slate-700 ring-2 ring-transparent group-hover:ring-primary/50 transition-all" 
-                      style={{ backgroundImage: 'url("https://picsum.photos/seed/admin/100/100")' }}
-                    ></div>
-                    <div className="absolute bottom-0 right-0 size-2.5 bg-green-500 rounded-full ring-2 ring-dark-bg"></div>
+                    <div className={`rounded-full size-8 ${roleAvatarColor} flex items-center justify-center text-white font-semibold text-[10px] ring-2 ring-transparent group-hover:ring-primary/50 transition-all`}>
+                      {userInitials}
+                    </div>
+                    <div className={`absolute bottom-0 right-0 size-2.5 rounded-full ring-2 ring-dark-bg ${statusInfo.dotClassName}`}></div>
                   </div>
                   <div className="hidden sm:flex flex-col items-start">
-                    <span className="text-sm font-medium text-white group-hover:text-primary transition-colors leading-tight">{t('admin_user')}</span>
-                    <span className="text-[10px] text-dark-muted uppercase tracking-wider font-semibold">{t('manager')}</span>
+                    <span className="text-sm font-medium text-white group-hover:text-primary transition-colors leading-tight">{displayName}</span>
+                    <span className="text-[10px] text-dark-muted uppercase tracking-wider font-semibold">{roleInfo.name}</span>
                   </div>
                   <ChevronDown size={16} className="text-dark-muted hidden sm:block group-hover:text-white transition-colors" />
                 </button>
                 {(isDropdownOpen || isLogoutModalOpen) && (
                   <div 
-                  className="absolute top-full right-0 mt-0 w-48 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1"
+                  className="absolute top-full right-0 mt-1 w-80 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1"
                   onMouseEnter={() => setIsLogoutModalOpen(true)}
                   onMouseLeave={() => setIsLogoutModalOpen(false)}
                 >
+                    <div className="px-3 pt-3 pb-2">
+                      <div className="rounded-xl border border-dark-border bg-dark-bg/70 p-3">
+                        <div className="flex items-start gap-3">
+                          <div className={`h-10 w-10 rounded-full ${roleAvatarColor} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+                            {userInitials}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+                            <p className="text-xs text-dark-muted truncate">{userHandle}</p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium border bg-blue-500/10 text-blue-400 border-blue-500/20">
+                                {roleInfo.name}
+                              </span>
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium border ${statusInfo.className}`}>
+                                {statusInfo.text}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="mt-3 space-y-2 text-xs text-dark-muted">
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-purple-500/10 text-purple-400">
+                              <Briefcase size={14} />
+                            </span>
+                            <span className="truncate">{profile?.position || roleInfo.access}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-blue-500/10 text-blue-400">
+                              <Mail size={14} />
+                            </span>
+                            <span className="truncate">{profile?.email || 'No email'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-400">
+                              <Building2 size={14} />
+                            </span>
+                            <span className="truncate">{workplaceLabel}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="h-px bg-dark-border my-1"></div>
                     <div className="px-3 pt-3 pb-2">
                       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-dark-muted">
                         <Languages size={14} />

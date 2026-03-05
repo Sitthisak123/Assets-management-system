@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   User, 
   Mail, 
+  MapPin,
   BadgeCheck, 
   Save, 
   AlertCircle,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { personnelService } from '../src/services/personnelService';
+import { workplaceService, Workplace } from '../src/services/workplaceService';
 import Breadcrumb from '../components/Breadcrumb';
 
 const EditPersonnel: React.FC = () => {
@@ -21,15 +23,20 @@ const EditPersonnel: React.FC = () => {
   const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
   const [position, setPosition] = useState('');
-  const [role, setRole] = useState(0);
+  const [workplaceId, setWorkplaceId] = useState<number | ''>('');
+  const [role, setRole] = useState(-1);
 
   // Original values for change detection
   const [originalFullname, setOriginalFullname] = useState('');
   const [originalEmail, setOriginalEmail] = useState('');
   const [originalPosition, setOriginalPosition] = useState('');
-  const [originalRole, setOriginalRole] = useState(0);
+  const [originalWorkplaceId, setOriginalWorkplaceId] = useState<number | ''>('');
+  const [originalRole, setOriginalRole] = useState(-1);
 
   const [loading, setLoading] = useState(true);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [workplacesLoading, setWorkplacesLoading] = useState(true);
+  const [workplacesError, setWorkplacesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -39,9 +46,10 @@ const EditPersonnel: React.FC = () => {
       fullname !== originalFullname ||
       email !== originalEmail ||
       position !== originalPosition ||
+      workplaceId !== originalWorkplaceId ||
       role !== originalRole
     );
-  }, [fullname, originalFullname, email, originalEmail, position, originalPosition, role, originalRole]);
+  }, [fullname, originalFullname, email, originalEmail, position, originalPosition, workplaceId, originalWorkplaceId, role, originalRole]);
 
   useEffect(() => {
     const fetchPersonnel = async () => {
@@ -58,12 +66,14 @@ const EditPersonnel: React.FC = () => {
           setFullname(data.fullname);
           setEmail(data.email || '');
           setPosition(data.position);
+          setWorkplaceId(data.workplace_id ?? '');
           setRole(data.role);
 
           // Store original values for change detection
           setOriginalFullname(data.fullname);
           setOriginalEmail(data.email || '');
           setOriginalPosition(data.position);
+          setOriginalWorkplaceId(data.workplace_id ?? '');
           setOriginalRole(data.role);
         }
       } catch (err: any) {
@@ -74,6 +84,31 @@ const EditPersonnel: React.FC = () => {
 
     fetchPersonnel();
   }, [id]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchWorkplaces = async () => {
+      setWorkplacesLoading(true);
+      try {
+        const response = await workplaceService.getWorkplaces();
+        if (!mounted) return;
+        setWorkplaces(response.data || []);
+        setWorkplacesError(null);
+      } catch (err: any) {
+        if (!mounted) return;
+        setWorkplaces([]);
+        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+      } finally {
+        if (mounted) setWorkplacesLoading(false);
+      }
+    };
+
+    fetchWorkplaces();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -110,12 +145,14 @@ const EditPersonnel: React.FC = () => {
         fullname,
         email,
         position,
+        workplace_id: workplaceId === '' ? null : workplaceId,
         role,
       });
       // Update original values after successful save
       setOriginalFullname(fullname);
       setOriginalEmail(email);
       setOriginalPosition(position);
+      setOriginalWorkplaceId(workplaceId);
       setOriginalRole(role);
       navigate('/personnel');
     } catch (err: any) {
@@ -227,6 +264,27 @@ const EditPersonnel: React.FC = () => {
                   />
                 </div>
               </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium text-gray-300">Workplace</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <select
+                    value={workplaceId}
+                    onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+                  >
+                    <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                    {workplaces.map((workplace) => (
+                      <option key={workplace.id} value={workplace.id}>
+                        {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {workplacesError && (
+                  <p className="text-xs text-amber-400">{workplacesError}</p>
+                )}
+              </div>
             </div>
           </section>
 
@@ -253,11 +311,11 @@ const EditPersonnel: React.FC = () => {
                 <select 
                   value={role}
                   onChange={(e) => setRole(parseInt(e.target.value))}
+                  disabled
                   required
-                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-not-allowed appearance-none"
                 >
-                  <option value={0}>User</option>
-                  <option value={1}>Admin</option>
+                  <option value={-1}>Personnel Role</option>
                 </select>
               </div>
             </div>

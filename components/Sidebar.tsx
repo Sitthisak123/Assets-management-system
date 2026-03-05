@@ -17,7 +17,6 @@ const Sidebar: React.FC = () => {
 
   const navItems = [
     { name: t('dashboard'), path: '/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: t('personnel'), path: '/personnel', icon: <Users size={20} /> },
     { name: t('inventory'), path: '/materials', icon: <Package size={20} /> },
     { name: t('requisitions'), path: '/requisitions', icon: <FileText size={20} /> },
     { name: t('users_roles'), path: '/users', icon: <Users size={20} /> },

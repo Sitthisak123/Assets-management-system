@@ -18,10 +18,12 @@ import ViewRequitionSlip from './pages/ViewRequitionSlip';
 import Materials from './pages/Materials';
 import CreateMaterial from './pages/CreateMaterial';
 import EditMaterial from './pages/EditMaterial';
+import MaterialTypes from './pages/MaterialTypes';
 import Users from './pages/Users';
 import CreateUser from './pages/CreateUser';
 import EditUser from './pages/EditUser';
 import ViewUser from './pages/ViewUser';
+import Workplaces from './pages/Workplaces';
 import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
 
@@ -71,10 +73,12 @@ const App: React.FC = () => {
             <Route path="/materials" element={<Materials />} />
             <Route path="/materials/create" element={<CreateMaterial />} />
             <Route path="/materials/edit/:id" element={<EditMaterial />} />
+            <Route path="/materials/types" element={<MaterialTypes />} />
             <Route path="/users" element={<Users />} />
             <Route path="/users/create" element={<CreateUser />} />
             <Route path="/users/edit/:id" element={<EditUser />} />
             <Route path="/users/view/:id" element={<ViewUser />} />
+            <Route path="/workplaces" element={<Workplaces />} />
             <Route path="/settings" element={<UserProfile />} />
             <Route path="*" element={<NotFound />} />
           </Route>

@@ -5,9 +5,10 @@ import apiClient from './apiClient';
 export interface UserSubset {
   id: number;
   fullname: string;
-  username: string;
-  email: string;
+  username?: string | null;
+  email?: string | null;
   position: string;
+  workplace_id?: number | null;
   role: number;
 }
 

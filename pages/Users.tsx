@@ -1,15 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { User } from '../src/services/userService';
+import { userService, User } from '../src/services/userService';
 import { Link } from 'react-router-dom';
 import { 
   Search, 
   Plus, 
-  MoreHorizontal, 
+  Building2,
   Shield, 
   UserX, 
   CheckCircle, 
-  Download, 
   Users as UsersIcon,
   ChevronRight,
   Loader,
@@ -28,54 +27,37 @@ const Users: React.FC = () => {
   const fetchUsers = async (role?: string, status?: string) => {
     setLoading(true);
     try {
-      let query = `{
-        getUsers {
-          id
-          fullname
-          username
-          email
-          position
-          role
-          status
-          created_at
-          updated_at
-        }
-      }`;
-      
-      const response = await fetch('http://localhost:3000/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({ query })
-      });
-      
-      const data = await response.json();
-      if (data.errors) {
-        setError(data.errors[0].message);
-        setProfiles([]);
-      } else {
-        let users = data.data.getUsers || [];
-        
-        // Client-side filtering based on role and status
-        if (role && role !== 'all') {
-          users = users.filter((u: any) => u.role === parseInt(role));
-        }
-        
-        if (status && status !== 'all') {
-          users = users.filter((u: any) => u.status === parseInt(status));
-        }
-        
-        if (searchQuery) {
-          users = users.filter((u: any) => 
-            u.fullname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.username?.toLowerCase().includes(searchQuery.toLowerCase())
-          ) || [];
-        }
-        
-        setProfiles(users);
+      setError(null);
+      const response = await userService.getUsers();
+      let users = response.data || [];
+      console.log('Fetched users:', users);
+
+      // Client-side filtering based on role and status
+      if (role && role !== 'all') {
+        users = users.filter((u: User) => u.role === parseInt(role, 10));
       }
+
+      if (status && status !== 'all') {
+        users = users.filter((u: User) => u.status === parseInt(status, 10));
+      }
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        users = users.filter((u: User) => {
+          const workplaceText = `${u.workplace?.building || ''} ${u.workplace?.room || ''}`.toLowerCase();
+          return (
+            u.fullname?.toLowerCase().includes(q) ||
+            u.email?.toLowerCase().includes(q) ||
+            u.username?.toLowerCase().includes(q) ||
+            workplaceText.includes(q)
+          );
+        });
+      }
+
+      setProfiles(users);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Failed to fetch users');
+      setProfiles([]);
     } finally {
       setLoading(false);
     }
@@ -117,6 +99,17 @@ const Users: React.FC = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
 
+  const getWorkplaceLabel = (user: User) => {
+    console.log('User workplace data:', user.workplace);
+    if (user.workplace?.building || user.workplace?.room) {
+      return [user.workplace.building, user.workplace.room].filter(Boolean).join(' / ');
+    }
+    if (user.workplace_id) {
+      return `Workplace #${user.workplace_id}`;
+    }
+    return 'No workplace';
+  };
+
   const totalUsers = profiles.length;
   const activeUsers = profiles.filter(p => p.status === 1).length;
   const adminUsers = profiles.filter(p => p.role === 1).length;
@@ -131,10 +124,10 @@ const Users: React.FC = () => {
           <span className="text-white font-medium">User Management</span>
         </nav>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 h-9 px-4 rounded-lg border border-dark-border bg-dark-surface hover:bg-slate-700 text-dark-muted hover:text-white text-sm font-medium transition-all">
-            <Download size={16} />
-            Export
-          </button>
+          <Link to="/workplaces" className="flex items-center justify-center gap-2 bg-dark-surface border border-dark-border hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg transition-all font-medium whitespace-nowrap">
+            <Building2 size={18} />
+            <span>Workplace</span>
+          </Link>
           <Link to="/users/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
             <Plus size={20} />
             <span>User</span>
@@ -222,7 +215,7 @@ const Users: React.FC = () => {
           <table className="w-full text-left text-sm text-white">
             <thead className="bg-dark-bg/50 border-b border-dark-border text-dark-muted uppercase tracking-wider text-xs font-semibold">
               <tr>
-                <th className="px-6 py-4 w-10"><input type="checkbox" className="rounded bg-slate-900 border-dark-border" /></th>
+                <th className="px-6 py-4 w-16">#</th>
                 <th className="px-6 py-4">User</th>
                 <th className="px-6 py-4">Role</th>
                 <th className="px-6 py-4">Last Active</th>
@@ -233,7 +226,7 @@ const Users: React.FC = () => {
             <tbody className="divide-y divide-dark-border">
               {profiles.map((p) => (
                 <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
-                  <td className="px-6 py-4"><input type="checkbox" className="rounded bg-slate-900 border-dark-border" /></td>
+                  <td className="px-6 py-4 text-sm text-dark-muted font-mono">{p.id}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className={`h-10 w-10 rounded-full ${getRoleColor(p.role)} flex items-center justify-center text-white font-bold text-xs`}>
@@ -242,6 +235,7 @@ const Users: React.FC = () => {
                       <div>
                         <p className="font-medium text-white">{p.fullname}</p>
                         <p className="text-dark-muted text-xs">{p.username ? "@"+p.username : '<No Username>'} | {p.email || '<No Email>'}</p>
+                        <p className="text-dark-muted text-xs">{getWorkplaceLabel(p)}</p>
                       </div>
                     </div>
                   </td>
@@ -251,7 +245,7 @@ const Users: React.FC = () => {
                       <span className="text-dark-muted text-xs">{getRoleInfo(p.role).access}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-dark-muted font-mono text-xs">{new Date(p.updated_at).toLocaleString()}</td>
+                  <td className="px-6 py-4 text-dark-muted font-mono text-xs">{p.updated_at ? new Date(p.updated_at).toLocaleString() : 'N/A'}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusInfo(p.status).className}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${p.status === 1 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></span>

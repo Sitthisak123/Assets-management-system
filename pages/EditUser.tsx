@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   User, 
   Mail, 
+  MapPin,
   BadgeCheck, 
   Save, 
   AlertCircle,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { userService } from '../src/services/userService';
+import { workplaceService, Workplace } from '../src/services/workplaceService';
 import Breadcrumb from '../components/Breadcrumb';
 
 const EditUser: React.FC = () => {
@@ -22,6 +24,7 @@ const EditUser: React.FC = () => {
   // Form state
   const [fullname, setFullname] = useState('');
   const [position, setPosition] = useState('');
+  const [workplaceId, setWorkplaceId] = useState<number | ''>('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -32,6 +35,7 @@ const EditUser: React.FC = () => {
   // Original values for change detection
   const [originalFullname, setOriginalFullname] = useState('');
   const [originalPosition, setOriginalPosition] = useState('');
+  const [originalWorkplaceId, setOriginalWorkplaceId] = useState<number | ''>('');
   const [originalEmail, setOriginalEmail] = useState('');
   const [originalUsername, setOriginalUsername] = useState('');
   const [originalDisplayName, setOriginalDisplayName] = useState('');
@@ -40,6 +44,9 @@ const EditUser: React.FC = () => {
 
 
   const [loading, setLoading] = useState(true);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [workplacesLoading, setWorkplacesLoading] = useState(true);
+  const [workplacesError, setWorkplacesError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -48,6 +55,7 @@ const EditUser: React.FC = () => {
     return (
       fullname !== originalFullname ||
       position !== originalPosition ||
+      workplaceId !== originalWorkplaceId ||
       email !== originalEmail ||
       username !== originalUsername ||
       displayName !== originalDisplayName ||
@@ -55,7 +63,7 @@ const EditUser: React.FC = () => {
       status !== originalStatus ||
       password !== ''
     );
-  }, [fullname, originalFullname, position, originalPosition, email, originalEmail, username, originalUsername, displayName, originalDisplayName, role, originalRole, status, originalStatus, password]);
+  }, [fullname, originalFullname, position, originalPosition, workplaceId, originalWorkplaceId, email, originalEmail, username, originalUsername, displayName, originalDisplayName, role, originalRole, status, originalStatus, password]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -71,6 +79,7 @@ const EditUser: React.FC = () => {
         if (data) {
           setFullname(data.fullname);
           setPosition(data.position);
+          setWorkplaceId(data.workplace_id ?? '');
           setEmail(data.email || '');
           setUsername(data.username || '');
           setDisplayName(data.display_name || '');
@@ -80,6 +89,7 @@ const EditUser: React.FC = () => {
           // Store original values
           setOriginalFullname(data.fullname);
           setOriginalPosition(data.position);
+          setOriginalWorkplaceId(data.workplace_id ?? '');
           setOriginalEmail(data.email || '');
           setOriginalUsername(data.username || '');
           setOriginalDisplayName(data.display_name || '');
@@ -95,6 +105,31 @@ const EditUser: React.FC = () => {
 
     fetchUser();
   }, [id]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchWorkplaces = async () => {
+      setWorkplacesLoading(true);
+      try {
+        const response = await workplaceService.getWorkplaces();
+        if (!mounted) return;
+        setWorkplaces(response.data || []);
+        setWorkplacesError(null);
+      } catch (err: any) {
+        if (!mounted) return;
+        setWorkplaces([]);
+        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+      } finally {
+        if (mounted) setWorkplacesLoading(false);
+      }
+    };
+
+    fetchWorkplaces();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [isSuspending, setIsSuspending] = useState(false);
@@ -129,6 +164,7 @@ const EditUser: React.FC = () => {
     const userData: any = {
       fullname,
       position,
+      workplace_id: workplaceId === '' ? null : workplaceId,
       email,
       username,
       display_name: displayName,
@@ -234,6 +270,27 @@ const EditUser: React.FC = () => {
                     placeholder="sarah@company.com" 
                   />
                 </div>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium text-gray-300">Workplace</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                  <select
+                    value={workplaceId}
+                    onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
+                  >
+                    <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                    {workplaces.map((workplace) => (
+                      <option key={workplace.id} value={workplace.id}>
+                        {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {workplacesError && (
+                  <p className="text-xs text-amber-400">{workplacesError}</p>
+                )}
               </div>
             </div>
           </section>

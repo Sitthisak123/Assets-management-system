@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from '../src/services/authService';
 import { userService, User as UserType } from '../src/services/userService';
+import { workplaceService, Workplace } from '../src/services/workplaceService';
 import { 
   User as UserIcon, // Renamed to avoid collision
   Mail, 
+  MapPin,
   Shield, 
   Camera, 
   Save, 
@@ -28,6 +30,11 @@ const UserProfile: React.FC = () => {
   const [title, setTitle] = useState('');
   const [fullname, setFullname] = useState('');
   const [position, setPosition] = useState('');
+  const [workplaceId, setWorkplaceId] = useState<number | ''>('');
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [workplacesLoading, setWorkplacesLoading] = useState(true);
+  const [workplacesError, setWorkplacesError] = useState<string | null>(null);
+  const [initialValues, setInitialValues] = useState({ displayName: '', position: '', workplaceId: '' as number | '' });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -35,12 +42,18 @@ const UserProfile: React.FC = () => {
       try {
         // Use authService to get the currently logged-in user's full details
         const data = await authService.getProfile();
-        
+
+        const displayName = (data as any).display_name ?? data.title ?? '';
+        const currentPosition = data.position || '';
+        const currentWorkplaceId = (data as any).workplace_id ?? '';
+
         setProfile(data);
         setUsername(data.username || '');
-        setTitle(data.display_name || '');
+        setTitle(displayName);
         setFullname(data.fullname || '');
-        setPosition(data.position || '');
+        setPosition(currentPosition);
+        setWorkplaceId(currentWorkplaceId);
+        setInitialValues({ displayName, position: currentPosition, workplaceId: currentWorkplaceId });
       } catch (err: any) {
         setError("Failed to load profile data.");
         console.error(err);
@@ -51,9 +64,45 @@ const UserProfile: React.FC = () => {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchWorkplaces = async () => {
+      setWorkplacesLoading(true);
+      try {
+        const response = await workplaceService.getWorkplaces();
+        if (!mounted) return;
+        setWorkplaces(response.data || []);
+        setWorkplacesError(null);
+      } catch (err: any) {
+        if (!mounted) return;
+        setWorkplaces([]);
+        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+      } finally {
+        if (mounted) setWorkplacesLoading(false);
+      }
+    };
+
+    fetchWorkplaces();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
+
+    const trimmedDisplayName = title.trim();
+    const trimmedPosition = position.trim();
+    const normalizedWorkplaceId = workplaceId === '' ? null : workplaceId;
+    const hasChanges = (
+      trimmedDisplayName !== initialValues.displayName
+      || trimmedPosition !== initialValues.position
+      || normalizedWorkplaceId !== (initialValues.workplaceId === '' ? null : initialValues.workplaceId)
+    );
+
+    if (!hasChanges) return;
 
     setUpdating(true);
     setError(null);
@@ -61,14 +110,24 @@ const UserProfile: React.FC = () => {
 
     try {
       // Send all editable fields to the backend
-      const response = await userService.updateUser(profile.id, { 
-        username, 
-        title,
-        fullname,
-        position
-      });
-      
+      const payload: Partial<UserType> & { title?: string } = {
+        display_name: trimmedDisplayName,
+        // Keep `title` for backward compatibility with older backend payloads.
+        title: trimmedDisplayName,
+        position: trimmedPosition,
+        workplace_id: normalizedWorkplaceId,
+      };
+      const response = await userService.updateUser(profile.id, payload);
+
+      const updatedDisplayName = (response.data as any).display_name ?? (response.data as any).title ?? trimmedDisplayName;
+      const updatedPosition = response.data.position ?? trimmedPosition;
+      const updatedWorkplaceId = (response.data as any).workplace_id ?? normalizedWorkplaceId ?? '';
+
       setProfile(response.data);
+      setTitle(updatedDisplayName);
+      setPosition(updatedPosition);
+      setWorkplaceId(updatedWorkplaceId);
+      setInitialValues({ displayName: updatedDisplayName, position: updatedPosition, workplaceId: updatedWorkplaceId });
       setSuccess("Profile updated successfully!");
     } catch (err: any) {
       console.error(err);
@@ -76,6 +135,12 @@ const UserProfile: React.FC = () => {
     }
     setUpdating(false);
   };
+
+  const hasChanges = (
+    title.trim() !== initialValues.displayName
+    || position.trim() !== initialValues.position
+    || (workplaceId === '' ? null : workplaceId) !== (initialValues.workplaceId === '' ? null : initialValues.workplaceId)
+  );
 
   const getStatusInfo = (status: number | undefined) => {
     switch (status) {
@@ -165,11 +230,11 @@ const UserProfile: React.FC = () => {
                       readOnly value={username} onChange={e => setUsername(e.target.value)} />
                   </div> */}
 
-                  {/* Title (Mr/Ms) */}
+                  {/* Display Name */}
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Title (Honorific)</label>
+                    <label className="text-slate-300 text-sm font-medium">Display name</label>
                      <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
-                      value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Mr., Ms., Dr." />
+                      value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. John Doe" />
                   </div>
 
                   {/* Full Name */}
@@ -188,12 +253,35 @@ const UserProfile: React.FC = () => {
                   {/* Position */}
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-slate-300 text-sm font-medium">Job Position</label>
-                    <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed"
-                      readOnly value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
+                    <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all"
+                      value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
                   </div>
                     {/* <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
                       readOnly value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
                   </div> */}
+
+                  {/* Workplace */}
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-slate-300 text-sm font-medium">Workplace</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
+                      <select
+                        value={workplaceId}
+                        onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
+                        className="w-full bg-dark-bg border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+                      >
+                        <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                        {workplaces.map((workplace) => (
+                          <option key={workplace.id} value={workplace.id}>
+                            {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {workplacesError && (
+                      <p className="text-xs text-amber-400">{workplacesError}</p>
+                    )}
+                  </div>
 
                   {/* Email (Read Only) */}
                   <div className="md:col-span-2 space-y-1.5">
@@ -233,7 +321,7 @@ const UserProfile: React.FC = () => {
             <Link to="/" className="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-dark-border text-white font-medium hover:bg-slate-800 transition-colors text-center">
               Cancel
             </Link>
-            <button type="submit" disabled={updating} className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+            <button type="submit" disabled={updating || !hasChanges} title={!hasChanges ? "No changes made" : "Save changes"} className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
               {updating ? <><Loader size={18} className="animate-spin" /><span>Saving...</span></> : <><Save size={18} /><span>Save Changes</span></>}
             </button>
           </div>
