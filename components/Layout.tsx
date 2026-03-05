@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { authService, type User as AuthUser } from '../src/services/authService';
@@ -22,9 +22,9 @@ const Layout: React.FC = () => {
   const currentTitleKey = pageTitleKeyMap[pageTitle] ?? 'dashboard';
   const headerTitle = pageTitle ? t(currentTitleKey) : t('dashboard');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [profile, setProfile] = useState<AuthUser | null>(null);
   const [tokenUser, setTokenUser] = useState(() => authService.getCurrentUser());
+  const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -46,6 +46,20 @@ const Layout: React.FC = () => {
     syncCurrentUser();
     return () => {
       mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!profileMenuRef.current?.contains(target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -178,10 +192,15 @@ const Layout: React.FC = () => {
               
               <div 
                 className="relative"
-                onMouseEnter={() => setIsDropdownOpen(true)}
-                onMouseLeave={() => setIsDropdownOpen(false)}
+                ref={profileMenuRef}
               >
-                <button className="flex items-center gap-3 group rounded-lg px-1.5 py-1 hover:bg-dark-surface transition-colors">
+                <button
+                  type="button"
+                  onClick={() => setIsDropdownOpen((current) => !current)}
+                  className="flex items-center gap-3 group rounded-lg px-1.5 py-1 hover:bg-dark-surface transition-colors"
+                  aria-expanded={isDropdownOpen}
+                  aria-haspopup="menu"
+                >
                   <div className="relative">
                     <div className={`rounded-full size-8 ${roleAvatarColor} flex items-center justify-center text-white font-semibold text-[10px] ring-2 ring-transparent group-hover:ring-primary/50 transition-all`}>
                       {userInitials}
@@ -194,11 +213,10 @@ const Layout: React.FC = () => {
                   </div>
                   <ChevronDown size={16} className="text-dark-muted hidden sm:block group-hover:text-white transition-colors" />
                 </button>
-                {(isDropdownOpen || isLogoutModalOpen) && (
+                {isDropdownOpen && (
                   <div 
                   className="absolute top-full right-0 mt-1 w-80 bg-dark-surface rounded-lg shadow-lg border border-dark-border py-1"
-                  onMouseEnter={() => setIsLogoutModalOpen(true)}
-                  onMouseLeave={() => setIsLogoutModalOpen(false)}
+                  role="menu"
                 >
                     <div className="px-3 pt-3 pb-2">
                       <div className="rounded-xl border border-dark-border bg-dark-bg/70 p-3">

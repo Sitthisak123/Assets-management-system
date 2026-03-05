@@ -78,7 +78,6 @@ const EditRequisition: React.FC = () => {
           personnelService.getPersonnel(),
           materialService.getMaterials(),
         ]);
-        console.log('Personnel response:', personnelRes);
         setPersonnel(personnelRes.data);
         setMaterials(materialsRes.data);
 

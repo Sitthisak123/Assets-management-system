@@ -10,6 +10,7 @@ import {
   Loader,
   Filter,
   X,
+  AlertCircle,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../components/Breadcrumb';
@@ -40,19 +41,29 @@ const Materials: React.FC = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState<MaterialFilters>(defaultMaterialFilters);
   const [draftFilters, setDraftFilters] = useState<MaterialFilters>(defaultMaterialFilters);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isAddQtyModalOpen, setIsAddQtyModalOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const [addQtyValue, setAddQtyValue] = useState<number | ''>('');
+  const [addQtyError, setAddQtyError] = useState<string | null>(null);
+  const [isAddQtyLoading, setIsAddQtyLoading] = useState(false);
+  const [isAddQtySubmitting, setIsAddQtySubmitting] = useState(false);
+
+  const fetchMaterials = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await materialService.getMaterials();
+      setMaterials(Array.isArray(response.data) ? response.data : []);
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Failed to fetch materials');
+      setMaterials([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchMaterials = async () => {
-      setLoading(true);
-      try {
-        const response = await materialService.getMaterials();
-        setMaterials(response.data);
-      } catch (err: any) {
-        setError(err.message || 'Failed to fetch materials');
-      }
-      setLoading(false);
-    };
-
     fetchMaterials();
   }, []);
 
@@ -187,6 +198,95 @@ const Materials: React.FC = () => {
     setIsFilterModalOpen(false);
   };
 
+  const closeAddQtyModal = () => {
+    if (isAddQtySubmitting) return;
+    setIsAddQtyModalOpen(false);
+    setSelectedMaterial(null);
+    setAddQtyValue('');
+    setAddQtyError(null);
+    setIsAddQtyLoading(false);
+  };
+
+  const openAddQtyModal = async (material: Material) => {
+    setSuccessMessage(null);
+    setSelectedMaterial(material);
+    setAddQtyValue('');
+    setAddQtyError(null);
+    setIsAddQtyModalOpen(true);
+    setIsAddQtyLoading(true);
+
+    try {
+      const response = await materialService.getMaterialById(material.id);
+      const latestMaterial = response.data;
+      setSelectedMaterial({
+        ...material,
+        ...latestMaterial,
+        material_type: latestMaterial.material_type ?? material.material_type,
+      });
+    } catch (err: any) {
+      setAddQtyError(err.response?.data?.message || err.message || 'Failed to load latest material data.');
+    } finally {
+      setIsAddQtyLoading(false);
+    }
+  };
+
+  const handleAddQtySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedMaterial) {
+      setAddQtyError('Material not found.');
+      return;
+    }
+
+    const parsedAddValue = Number(addQtyValue);
+    if (!Number.isInteger(parsedAddValue) || parsedAddValue <= 0) {
+      setAddQtyError('Add value must be a positive integer.');
+      return;
+    }
+
+    setIsAddQtySubmitting(true);
+    setAddQtyError(null);
+
+    try {
+      const response = await materialService.addMaterialQty(selectedMaterial.id, {
+        add_value: parsedAddValue,
+      });
+      const payload = response.data;
+
+      setMaterials((current) =>
+        current.map((item) =>
+          item.id === payload.material.id
+            ? {
+                ...item,
+                ...payload.material,
+                material_type: payload.material.material_type ?? item.material_type,
+              }
+            : item
+        )
+      );
+
+      setSuccessMessage(
+        `${payload.material.title}: ${payload.last_value} + ${payload.add_value} = ${payload.new_value}${payload.material.unit ? ` ${payload.material.unit}` : ''}`
+      );
+      setIsAddQtyModalOpen(false);
+      setSelectedMaterial(null);
+      setAddQtyValue('');
+      setAddQtyError(null);
+    } catch (err: any) {
+      setAddQtyError(err.response?.data?.message || err.message || 'Failed to add quantity.');
+    } finally {
+      setIsAddQtySubmitting(false);
+    }
+  };
+
+  const addQtyPreview = useMemo(() => {
+    if (!selectedMaterial) return null;
+    const parsedAddValue = Number(addQtyValue);
+    if (!Number.isFinite(parsedAddValue) || parsedAddValue <= 0) {
+      return selectedMaterial.quantity;
+    }
+    return selectedMaterial.quantity + parsedAddValue;
+  }, [addQtyValue, selectedMaterial]);
+
   return (
     <div className="max-w-7xl mx-auto flex flex-col gap-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
@@ -207,6 +307,15 @@ const Materials: React.FC = () => {
         <h2 className="text-3xl font-bold text-white tracking-tight">Material Directory</h2>
         <p className="text-dark-muted text-sm max-w-2xl">Manage your inventory items, stock levels, and procurement needs efficiently.</p>
       </div>
+
+      {successMessage && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm rounded-lg p-3 flex items-center gap-3">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
+            +
+          </span>
+          <span>{successMessage}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-dark-surface p-4 rounded-xl border border-dark-border shadow-sm flex items-center gap-4">
@@ -336,7 +445,15 @@ const Materials: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                        <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all">
+                          <button
+                            type="button"
+                            onClick={() => openAddQtyModal(material)}
+                            className="p-1.5 text-dark-muted hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
+                            title="Add quantity"
+                          >
+                            <Plus size={18} />
+                          </button>
                           <Link to={`/materials/edit/${material.id}`} className="p-1.5 text-dark-muted hover:text-primary hover:bg-primary/10 rounded-md transition-colors"><Edit2 size={18} /></Link>
                         </div>
                       </td>
@@ -474,6 +591,107 @@ const Materials: React.FC = () => {
                   Apply Filters
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isAddQtyModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-xl bg-dark-surface border border-dark-border shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border">
+              <div>
+                <h3 className="text-white text-lg font-semibold">Add QTY.</h3>
+                <p className="text-xs text-dark-muted mt-1">Increase quantity for a material item using the dedicated API.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeAddQtyModal}
+                disabled={isAddQtySubmitting}
+                className="p-1.5 rounded-md text-dark-muted hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
+                aria-label="Close add quantity modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5">
+              {isAddQtyLoading ? (
+                <div className="flex justify-center items-center h-48">
+                  <Loader className="animate-spin text-primary" size={36} />
+                </div>
+              ) : !selectedMaterial ? (
+                <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                  Unable to load material details.
+                </div>
+              ) : (
+                <form onSubmit={handleAddQtySubmit} className="space-y-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-dark-border bg-dark-bg/70 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-wider text-dark-muted">Item Name</p>
+                      <p className="text-sm font-medium text-white mt-1">{selectedMaterial.title}</p>
+                      <p className="text-[11px] text-dark-muted mt-1">SKU-{selectedMaterial.id}</p>
+                    </div>
+                    <div className="rounded-lg border border-dark-border bg-dark-bg/70 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-wider text-dark-muted">Material Type</p>
+                      <p className="text-sm font-medium text-white mt-1">{selectedMaterial.material_type?.title || `Type #${selectedMaterial.material_type_id}`}</p>
+                      <p className="text-[11px] text-dark-muted mt-1">{selectedMaterial.unit}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-wider text-blue-300/80">Last Value</p>
+                      <p className="text-2xl font-bold text-white mt-1">{selectedMaterial.quantity}</p>
+                    </div>
+                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-wider text-emerald-300/80">Add Value</p>
+                      <input
+                        type="number"
+                        min={1}
+                        step={1}
+                        value={addQtyValue}
+                        onChange={(e) => {
+                          setAddQtyValue(e.target.value === '' ? '' : Number(e.target.value));
+                          if (addQtyError) setAddQtyError(null);
+                        }}
+                        className="mt-2 w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-primary focus:border-primary"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3">
+                      <p className="text-[11px] uppercase tracking-wider text-primary/80">New Value</p>
+                      <p className="text-2xl font-bold text-white mt-1">{addQtyPreview ?? '-'}</p>
+                    </div>
+                  </div>
+
+                  {addQtyError && (
+                    <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300 flex items-start gap-2">
+                      <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                      <span>{addQtyError}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={closeAddQtyModal}
+                      disabled={isAddQtySubmitting}
+                      className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-slate-800 transition-colors text-sm disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isAddQtySubmitting || !selectedMaterial}
+                      className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isAddQtySubmitting ? <Loader size={16} className="animate-spin" /> : <Plus size={16} />}
+                      <span>{isAddQtySubmitting ? 'Updating...' : 'Add Quantity'}</span>
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </div>
         </div>

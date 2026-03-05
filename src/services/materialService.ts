@@ -1,3 +1,4 @@
+import type { AxiosResponse } from 'axios';
 import apiClient from './apiClient';
 
 export interface MaterialType {
@@ -13,12 +14,19 @@ export interface Material {
   material_type_id: number;
   unit: string;
   quantity: number;
-  price: number; // Added price
+  price?: number;
   minimum_threshold?: number | null;
   safety_stock?: number;
   created_at: string;
   updated_at: string;
   material_type?: MaterialType;
+}
+
+export interface AddMaterialQtyResponse {
+  material: Material;
+  last_value: number;
+  add_value: number;
+  new_value: number;
 }
 
 const getAll = (): Promise<Material[]> => {
@@ -60,20 +68,27 @@ const getInventoryDistribution = (): Promise<any[]> => {
   });
 };
 
-const getMaterials = () => {
-  return apiClient.get('/materials');
+const getMaterials = (): Promise<AxiosResponse<Material[]>> => {
+  return apiClient.get<Material[]>('/materials');
 };
-const getMaterialById = (id: string) => {
-  return apiClient.get(`/materials/${id}`);
+const getMaterialById = (id: number | string): Promise<AxiosResponse<Material>> => {
+  return apiClient.get<Material>(`/materials/${id}`);
 };
 const createMaterial = (data: any) => {
   return apiClient.post('/materials', data);
 };
-const updateMaterial = (id: string, data: any) => {
+const updateMaterial = (id: number | string, data: any) => {
   return apiClient.put(`/materials/${id}`, data);
 };
-const deleteMaterial = (id: string) => {
+const deleteMaterial = (id: number | string) => {
   return apiClient.delete(`/materials/${id}`);
+};
+
+const addMaterialQty = (
+  id: number | string,
+  data: { add_value: number }
+): Promise<AxiosResponse<AddMaterialQtyResponse>> => {
+  return apiClient.patch<AddMaterialQtyResponse>(`/materials/${id}/add-qty`, data);
 };
 
 const getMaterialTypes = () => {
@@ -108,6 +123,7 @@ export const materialService = {
   createMaterial,
   updateMaterial,
   deleteMaterial,
+  addMaterialQty,
   getInventoryDistribution,
   getMaterialTypes,
   createMaterialType,

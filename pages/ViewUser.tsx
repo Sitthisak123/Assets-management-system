@@ -19,7 +19,6 @@ const ViewUser: React.FC = () => {
 
       try {
         const response = await userService.getUserById(id);
-        console.log("Fetched user data:", response.data); // Debug log
         setUser(response.data);
       } catch (err: any) {
         setError(err.message || 'Failed to fetch user data.');

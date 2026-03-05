@@ -30,7 +30,6 @@ const Users: React.FC = () => {
       setError(null);
       const response = await userService.getUsers();
       let users = response.data || [];
-      console.log('Fetched users:', users);
 
       // Client-side filtering based on role and status
       if (role && role !== 'all') {
@@ -100,7 +99,6 @@ const Users: React.FC = () => {
   };
 
   const getWorkplaceLabel = (user: User) => {
-    console.log('User workplace data:', user.workplace);
     if (user.workplace?.building || user.workplace?.room) {
       return [user.workplace.building, user.workplace.room].filter(Boolean).join(' / ');
     }
