@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { authService } from './src/services/authService';
+import { useAppDispatch } from './store/hooks';
+import { clearUser, setToken, setUser } from './store/userSlice';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -23,18 +25,29 @@ import UserProfile from './pages/UserProfile';
 import NotFound from './pages/NotFound';
 
 const App: React.FC = () => {
+  const dispatch = useAppDispatch();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
+  const syncAuthState = () => {
+    const currentUser = authService.getCurrentUser();
+
+    if (currentUser) {
+      dispatch(setUser(currentUser));
+      dispatch(setToken(localStorage.getItem('token')));
+      setIsAuthenticated(true);
+      return;
+    }
+
+    dispatch(clearUser());
+    setIsAuthenticated(false);
+  };
+
   const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
+    syncAuthState();
   };
 
   useEffect(() => {
-    // console.log('Checking authentication status...');
-    const user = authService.getCurrentUser();
-    if (user) {
-      setIsAuthenticated(true);
-    }
+    syncAuthState();
   }, []);
 
   return (

@@ -3,11 +3,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 type User = {
   id: number;
   username: string;
+  role: number;
   email?: string;
-  role?: number;
   title?: string;
   personel_id?: number;
-  status: number;
+  status?: number;
+  iat?: number;
+  exp?: number;
 };
 
 interface UserState {

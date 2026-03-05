@@ -32,7 +32,6 @@ const ViewRequisition: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("user", user);
     fetchRequisition();
   }, [id]);
 
@@ -314,7 +313,7 @@ const ViewRequisition: React.FC = () => {
                                 <div className="w-px flex-grow bg-slate-700"></div>
                             </div>
                             <div>
-                                <p className="text-white font-medium">{requisition.status === '1' ? 'Approved' : 'Rejected'}</p>
+                                <p className="text-white font-medium">{requisition.status === 1 ? 'Approved' : 'Rejected'}</p>
                                 <p className="text-dark-muted text-sm">{new Date(requisition.evaluated_at).toLocaleString()}</p>
                             </div>
                         </div>
