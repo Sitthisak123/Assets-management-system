@@ -39,11 +39,11 @@ export interface Requisition {
   mr_form_materials: RequisitionItem[];
 }
 
-const getCountFilteredByStatus = (status: string): Promise<Requisition[]> => {
+const getCountFilteredByStatus = (status: '-1' | '0' | '1'): Promise<Requisition[]> => {
   return apiClient.get<Requisition[]>(`/requisitions/statusCount/${status}`);
 };
 
-const getStatusText = (status: number | string): 'Pending' | 'Approved' | 'Rejected' => {
+const getStatusText = (status: '-1' | '0' | '1'): 'Pending' | 'Approved' | 'Rejected' => {
   const statusStr = String(status);
   if (statusStr === '1' || statusStr === 'approved') return 'Approved';
   if (statusStr === '-1' || statusStr === 'rejected') return 'Rejected';
@@ -76,7 +76,7 @@ const getRecentRequisitions = (): Promise<any[]> => {
           user: req.creator?.fullname ?? 'Unknown User',
           item: itemText,
           date: formatDate(req.form_date),
-          status: getStatusText(req.status),
+          status: getStatusText(req.status as '-1' | '0' | '1'),
           avatar: `https://picsum.photos/seed/${req.creator?.fullname ?? 'default'}/40/40`,
         };
       });
@@ -115,6 +115,10 @@ const deleteRequisition = (id: number) => {
   return apiClient.delete(`/requisitions/${id}`);
 };
 
+const evaluateRequisition = (id: number, status: 1 | -1, authorizer_id: number) => {
+  return apiClient.put<Requisition>(`/requisitions/${id}/evaluate`, { status, authorizer_id });
+};
+
 export const requisitionService = {
   getRequisitions,
   getRequisitionById,
@@ -122,6 +126,7 @@ export const requisitionService = {
   createRequisition,
   updateRequisition,
   deleteRequisition,
+  evaluateRequisition,
   getRecentRequisitions,
   getRequisitionVolume,
 };

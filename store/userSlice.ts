@@ -7,7 +7,7 @@ type User = {
   role?: number;
   title?: string;
   personel_id?: number;
-  status?: number;
+  status: number;
 };
 
 interface UserState {

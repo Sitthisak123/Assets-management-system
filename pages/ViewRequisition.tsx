@@ -2,35 +2,59 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { requisitionService, Requisition } from '../src/services/requisitionService';
 import { Loader, AlertCircle, ChevronRight, FileText, User, ShoppingCart, Check, X, Hourglass, Calendar, Edit } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
 
 const ViewRequisition: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.user.user);
 
   const [requisition, setRequisition] = useState<Requisition | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+
+  const fetchRequisition = async () => {
+    if (!id) {
+      setError("No requisition ID provided.");
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      const response = await requisitionService.getRequisitionById(Number(id));
+      setRequisition(response.data);
+    } catch (err: any) {
+      setError(err.message || "Failed to fetch requisition data.");
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchRequisition = async () => {
-      if (!id) {
-        setError("No requisition ID provided.");
-        setLoading(false);
-        return;
-      }
-      try {
-        const response = await requisitionService.getRequisitionById(Number(id));
-        setRequisition(response.data);
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch requisition data.");
-      }
-      setLoading(false);
-    };
-
+    console.log("user", user);
     fetchRequisition();
   }, [id]);
 
-  const getStatusInfo = (status: number | string) => {
+  const handleEvaluate = async (status: 1 | -1) => {
+    if (!user) {
+      setError("You must be logged in to evaluate a requisition.");
+      return;
+    }
+    if (!id) return;
+    
+    setIsEvaluating(true);
+    try {
+      await requisitionService.evaluateRequisition(Number(id), status, user.id);
+      // Refresh data
+      await fetchRequisition();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Failed to evaluate requisition.");
+    }
+    setIsEvaluating(false);
+  };
+
+  const getStatusInfo = (status: '-1' | '0' | '1') => {
     const statusStr = String(status);
     switch (statusStr) {
       case '1':
@@ -57,7 +81,7 @@ const ViewRequisition: React.FC = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
   
-  if (loading) {
+  if (loading && !isEvaluating) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loader className="animate-spin text-primary" size={40} />
@@ -65,7 +89,7 @@ const ViewRequisition: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && !requisition) {
     return (
       <div className="max-w-5xl mx-auto flex flex-col gap-8">
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-4 flex flex-col items-center gap-3">
@@ -109,10 +133,12 @@ const ViewRequisition: React.FC = () => {
                     {statusInfo.icon}
                     <span>{statusInfo.label}</span>
                 </span>
-                <Link to={`/requisitions/edit/${requisition.id}`} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-all font-semibold">
-                    <Edit size={16} />
-                    <span>Edit</span>
-                </Link>
+                {requisition.status == '0' && (
+                  <Link to={`/requisitions/edit/${requisition.id}`} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg transition-all font-semibold">
+                      <Edit size={16} />
+                      <span>Edit</span>
+                  </Link>
+                )}
             </div>
         </div>
       </header>
@@ -120,6 +146,42 @@ const ViewRequisition: React.FC = () => {
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 flex flex-col gap-8">
+            {/* Action Buttons */}
+            {requisition.status == '0' && (
+            <>
+              {!user && (
+                <div className="bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm rounded-lg p-4 flex items-center gap-3">
+                  <AlertCircle size={20} />
+                  <span>You are not logged in. Please <Link to="/login" className="font-bold underline hover:text-yellow-300">log in</Link> to approve or reject this requisition.</span>
+                </div>
+              )}
+              <div className="bg-dark-surface rounded-2xl border border-dark-border shadow-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className='flex flex-col'>
+                      <h3 className="text-lg font-semibold text-white">Actions</h3>
+                      <p className="text-sm text-dark-muted">Approve or reject this material requisition.</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                      <button
+                          onClick={() => handleEvaluate(-1)}
+                          disabled={isEvaluating || !user}
+                          className="flex items-center justify-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-6 py-2.5 rounded-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                          {isEvaluating ? <Loader size={18} className="animate-spin" /> : <X size={18} />}
+                          <span>Reject</span>
+                      </button>
+                      <button
+                          onClick={() => handleEvaluate(1)}
+                          disabled={isEvaluating || !user}
+                          className="flex items-center justify-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-6 py-2.5 rounded-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                          {isEvaluating ? <Loader size={18} className="animate-spin" /> : <Check size={18} />}
+                          <span>Approve</span>
+                      </button>
+                  </div>
+              </div>
+            </>
+            )}
+            
             {/* Details Section */}
             <div className="bg-dark-surface rounded-2xl border border-dark-border shadow-xl">
                 <div className="p-6 border-b border-dark-border flex items-center gap-3">
@@ -252,7 +314,7 @@ const ViewRequisition: React.FC = () => {
                                 <div className="w-px flex-grow bg-slate-700"></div>
                             </div>
                             <div>
-                                <p className="text-white font-medium">{requisition.status === 1 ? 'Approved' : 'Rejected'}</p>
+                                <p className="text-white font-medium">{requisition.status === '1' ? 'Approved' : 'Rejected'}</p>
                                 <p className="text-dark-muted text-sm">{new Date(requisition.evaluated_at).toLocaleString()}</p>
                             </div>
                         </div>
