@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, Building2, Edit2, Loader, Plus, Save, Trash2, X } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
 import { workplaceService, Workplace } from '../src/services/workplaceService';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const Workplaces: React.FC = () => {
+  const { t } = useLanguage();
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [building, setBuilding] = useState('');
   const [room, setRoom] = useState('');
@@ -21,7 +23,7 @@ const Workplaces: React.FC = () => {
       const rows = Array.isArray(response.data) ? response.data : [];
       setWorkplaces(rows);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to fetch workplaces');
+      setError(err.response?.data?.message || err.message || t('workplace_error_fetch'));
       setWorkplaces([]);
     } finally {
       setLoading(false);
@@ -48,7 +50,7 @@ const Workplaces: React.FC = () => {
     const normalizedBuilding = building.trim();
     const normalizedRoom = room.trim();
     if (!normalizedBuilding) {
-      setFormError('Building is required.');
+      setFormError(t('workplace_error_building_required'));
       return;
     }
 
@@ -59,7 +61,7 @@ const Workplaces: React.FC = () => {
     });
 
     if (duplicateWorkplace) {
-      setFormError('Duplicate workplace is not allowed.');
+      setFormError(t('workplace_error_duplicate'));
       return;
     }
 
@@ -80,7 +82,7 @@ const Workplaces: React.FC = () => {
       resetForm();
       await fetchWorkplaces();
     } catch (err: any) {
-      setFormError(err.response?.data?.message || err.message || 'Failed to save workplace');
+      setFormError(err.response?.data?.message || err.message || t('workplace_error_save'));
     } finally {
       setSubmitting(false);
     }
@@ -94,7 +96,7 @@ const Workplaces: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    const confirmed = window.confirm('Delete this workplace?');
+    const confirmed = window.confirm(t('workplace_confirm_delete'));
     if (!confirmed) return;
 
     try {
@@ -102,7 +104,7 @@ const Workplaces: React.FC = () => {
       if (editingId === id) resetForm();
       await fetchWorkplaces();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to delete workplace');
+      setError(err.response?.data?.message || err.message || t('workplace_error_delete'));
     }
   };
 
@@ -115,8 +117,8 @@ const Workplaces: React.FC = () => {
             <Building2 size={20} />
           </div>
           <div>
-            <h1 className="text-white text-3xl font-bold tracking-tight">Workplaces</h1>
-            <p className="text-dark-muted text-sm">Manage available workplace references for users.</p>
+            <h1 className="text-white text-3xl font-bold tracking-tight">{t('workplaces_title')}</h1>
+            <p className="text-dark-muted text-sm">{t('workplaces_subtitle')}</p>
           </div>
         </div>
       </div>
@@ -133,13 +135,13 @@ const Workplaces: React.FC = () => {
           <input
             value={building}
             onChange={(e) => setBuilding(e.target.value)}
-            placeholder="Building (required)"
+            placeholder={t('workplace_building_required')}
             className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           />
           <input
             value={room}
             onChange={(e) => setRoom(e.target.value)}
-            placeholder="Room (optional)"
+            placeholder={t('workplace_room_optional')}
             className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           />
           <button
@@ -148,7 +150,7 @@ const Workplaces: React.FC = () => {
             className="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting ? <Loader size={16} className="animate-spin" /> : editingId !== null ? <Save size={16} /> : <Plus size={16} />}
-            <span>{editingId !== null ? 'Update Workplace' : 'Add Workplace'}</span>
+            <span>{editingId !== null ? t('workplace_update_button') : t('workplace_add_button')}</span>
           </button>
           <button
             type="button"
@@ -157,7 +159,7 @@ const Workplaces: React.FC = () => {
             className="px-4 py-2.5 rounded-lg border border-dark-border text-white text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <X size={16} />
-            <span>Clear</span>
+            <span>{t('common_clear')}</span>
           </button>
         </div>
         {formError && (
@@ -176,16 +178,16 @@ const Workplaces: React.FC = () => {
               <thead className="bg-dark-bg/50 border-b border-dark-border text-dark-muted uppercase tracking-wider text-xs font-semibold">
                 <tr>
                   <th className="px-6 py-4 w-16">#</th>
-                  <th className="px-6 py-4">Building</th>
-                  <th className="px-6 py-4">Room</th>
-                  <th className="px-6 py-4">Updated</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-4">{t('workplace_building')}</th>
+                  <th className="px-6 py-4">{t('workplace_room')}</th>
+                  <th className="px-6 py-4">{t('common_updated')}</th>
+                  <th className="px-6 py-4 text-right">{t('common_actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-border">
                 {workplaces.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-dark-muted">No workplaces found.</td>
+                    <td colSpan={5} className="px-6 py-8 text-center text-dark-muted">{t('workplace_empty')}</td>
                   </tr>
                 ) : (
                   workplaces.map((row) => (
@@ -193,14 +195,14 @@ const Workplaces: React.FC = () => {
                       <td className="px-6 py-4 text-sm text-dark-muted font-mono">{row.id}</td>
                       <td className="px-6 py-4 font-medium">{row.building}</td>
                       <td className="px-6 py-4 text-slate-300">{row.room || '-'}</td>
-                      <td className="px-6 py-4 text-dark-muted">{row.updated_at ? new Date(row.updated_at).toLocaleString() : 'N/A'}</td>
+                      <td className="px-6 py-4 text-dark-muted">{row.updated_at ? new Date(row.updated_at).toLocaleString() : t('not_available')}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             onClick={() => handleEdit(row)}
                             className="p-1.5 rounded-md text-dark-muted hover:text-white hover:bg-slate-800 transition-colors"
-                            title="Edit workplace"
+                            title={t('common_edit')}
                           >
                             <Edit2 size={16} />
                           </button>
@@ -208,7 +210,7 @@ const Workplaces: React.FC = () => {
                             type="button"
                             onClick={() => handleDelete(row.id)}
                             className="p-1.5 rounded-md text-dark-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            title="Delete workplace"
+                            title={t('common_delete')}
                           >
                             <Trash2 size={16} />
                           </button>

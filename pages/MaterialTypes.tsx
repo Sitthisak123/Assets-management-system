@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, Edit2, Loader, Plus, Save, Tags, Trash2, X } from 'lucide-react';
 import Breadcrumb from '../components/Breadcrumb';
 import { materialService, MaterialType } from '../src/services/materialService';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const MaterialTypes: React.FC = () => {
+  const { t } = useLanguage();
   const [materialTypes, setMaterialTypes] = useState<MaterialType[]>([]);
   const [title, setTitle] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -20,7 +22,7 @@ const MaterialTypes: React.FC = () => {
       const rows = Array.isArray(response.data) ? response.data : [];
       setMaterialTypes(rows);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to fetch material types');
+      setError(err.response?.data?.message || err.message || t('material_types_error_fetch'));
       setMaterialTypes([]);
     } finally {
       setLoading(false);
@@ -41,7 +43,7 @@ const MaterialTypes: React.FC = () => {
     e.preventDefault();
     const normalizedTitle = title.trim();
     if (!normalizedTitle) {
-      setFormError('Material type title is required.');
+      setFormError(t('material_types_error_required'));
       return;
     }
 
@@ -56,7 +58,7 @@ const MaterialTypes: React.FC = () => {
       resetForm();
       await fetchMaterialTypes();
     } catch (err: any) {
-      setFormError(err.response?.data?.message || err.message || 'Failed to save material type');
+      setFormError(err.response?.data?.message || err.message || t('material_types_error_save'));
     } finally {
       setSubmitting(false);
     }
@@ -69,7 +71,7 @@ const MaterialTypes: React.FC = () => {
   };
 
   const handleDelete = async (id: number) => {
-    const confirmed = window.confirm('Delete this material type?');
+    const confirmed = window.confirm(t('material_types_confirm_delete'));
     if (!confirmed) return;
 
     try {
@@ -77,7 +79,7 @@ const MaterialTypes: React.FC = () => {
       if (editingId === id) resetForm();
       await fetchMaterialTypes();
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to delete material type');
+      setError(err.response?.data?.message || err.message || t('material_types_error_delete'));
     }
   };
 
@@ -90,8 +92,8 @@ const MaterialTypes: React.FC = () => {
             <Tags size={20} />
           </div>
           <div>
-            <h1 className="text-white text-3xl font-bold tracking-tight">Material Types</h1>
-            <p className="text-dark-muted text-sm">Manage inventory categories used by materials.</p>
+            <h1 className="text-white text-3xl font-bold tracking-tight">{t('material_types_title')}</h1>
+            <p className="text-dark-muted text-sm">{t('material_types_subtitle')}</p>
           </div>
         </div>
       </div>
@@ -108,7 +110,7 @@ const MaterialTypes: React.FC = () => {
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Electrical, PPE, Office Supply"
+            placeholder={t('material_types_placeholder')}
             className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           />
           <button
@@ -117,7 +119,7 @@ const MaterialTypes: React.FC = () => {
             className="px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {submitting ? <Loader size={16} className="animate-spin" /> : editingId !== null ? <Save size={16} /> : <Plus size={16} />}
-            <span>{editingId !== null ? 'Update Type' : 'Add Type'}</span>
+            <span>{editingId !== null ? t('material_types_update') : t('material_types_add')}</span>
           </button>
           <button
             type="button"
@@ -126,7 +128,7 @@ const MaterialTypes: React.FC = () => {
             className="px-4 py-2.5 rounded-lg border border-dark-border text-white text-sm font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <X size={16} />
-            <span>Clear</span>
+            <span>{t('common_clear')}</span>
           </button>
         </div>
         {formError && (
@@ -145,29 +147,29 @@ const MaterialTypes: React.FC = () => {
               <thead className="bg-dark-bg/50 border-b border-dark-border text-dark-muted uppercase tracking-wider text-xs font-semibold">
                 <tr>
                   <th className="px-6 py-4 w-16">#</th>
-                  <th className="px-6 py-4">Title</th>
-                  <th className="px-6 py-4">Updated</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-4">{t('material_types_table_title')}</th>
+                  <th className="px-6 py-4">{t('common_updated')}</th>
+                  <th className="px-6 py-4 text-right">{t('common_actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-border">
                 {materialTypes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-dark-muted">No material types found.</td>
+                    <td colSpan={4} className="px-6 py-8 text-center text-dark-muted">{t('material_types_empty')}</td>
                   </tr>
                 ) : (
                   materialTypes.map((row) => (
                     <tr key={row.id} className="hover:bg-white/[0.02] transition-colors group">
                       <td className="px-6 py-4 text-sm text-dark-muted font-mono">{row.id}</td>
                       <td className="px-6 py-4 font-medium">{row.title}</td>
-                      <td className="px-6 py-4 text-dark-muted">{row.updated_at ? new Date(row.updated_at).toLocaleString() : 'N/A'}</td>
+                      <td className="px-6 py-4 text-dark-muted">{row.updated_at ? new Date(row.updated_at).toLocaleString() : t('not_available')}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2 opacity-70 group-hover:opacity-100 transition-opacity">
                           <button
                             type="button"
                             onClick={() => handleEdit(row)}
                             className="p-1.5 rounded-md text-dark-muted hover:text-white hover:bg-slate-800 transition-colors"
-                            title="Edit type"
+                            title={t('common_edit')}
                           >
                             <Edit2 size={16} />
                           </button>
@@ -175,7 +177,7 @@ const MaterialTypes: React.FC = () => {
                             type="button"
                             onClick={() => handleDelete(row.id)}
                             className="p-1.5 rounded-md text-dark-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                            title="Delete type"
+                            title={t('common_delete')}
                           >
                             <Trash2 size={16} />
                           </button>

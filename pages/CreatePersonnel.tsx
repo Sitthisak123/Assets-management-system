@@ -16,8 +16,10 @@ import { useNavigate } from 'react-router-dom';
 import { personnelService } from '../src/services/personnelService';
 import { workplaceService, Workplace } from '../src/services/workplaceService';
 import Breadcrumb from '../components/Breadcrumb';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const CreatePersonnel: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [fullname, setFullname] = useState('');
   const [email, setEmail] = useState('');
@@ -44,7 +46,7 @@ const CreatePersonnel: React.FC = () => {
       } catch (err: any) {
         if (!mounted) return;
         setWorkplaces([]);
-        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+        setWorkplacesError(err.response?.data?.message || err.message || t('workplace_error_load'));
       } finally {
         if (mounted) setWorkplacesLoading(false);
       }
@@ -73,7 +75,7 @@ const CreatePersonnel: React.FC = () => {
       await personnelService.createPersonnel(personnelData);
       navigate('/personnel');
     } catch (err: any) {
-      setError(err.message || 'Failed to create personnel.');
+      setError(err.message || t('personnel_error_create'));
       setLoading(false);
     }
   };
@@ -84,8 +86,11 @@ const CreatePersonnel: React.FC = () => {
       <div className="flex flex-col gap-6">
         <Breadcrumb />
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Create Personnel</h1>
-          <p className="text-dark-muted text-base max-w-3xl">Add a new employee to the organization directory. Please ensure all required fields marked with <span className="text-primary">*</span> are completed.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{t('personnel_create_title')}</h1>
+          <p className="text-dark-muted text-base max-w-3xl">
+            {t('personnel_create_subtitle')}{' '}
+            <span className="text-primary">*</span> {t('common_required_hint')}
+          </p>
         </div>
       </div>
 
@@ -106,11 +111,15 @@ const CreatePersonnel: React.FC = () => {
               </div>
             </div>
             <div className="text-center sm:text-left pt-1">
-              <h3 className="text-lg font-semibold text-white">Profile Photo</h3>
-              <p className="text-sm text-dark-muted mt-1 max-w-sm">Upload a professional headshot. This will be used for ID badges and the internal directory.</p>
+              <h3 className="text-lg font-semibold text-white">{t('profile_photo_title')}</h3>
+              <p className="text-sm text-dark-muted mt-1 max-w-sm">{t('profile_photo_subtitle_personnel')}</p>
               <div className="flex gap-4 mt-4 justify-center sm:justify-start">
-                <button type="button" className="text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 border border-dark-border px-4 py-2 rounded-lg transition-colors">Choose File</button>
-                <button type="button" className="text-sm font-medium text-red-400 hover:text-red-300 px-2 py-2 transition-colors">Remove</button>
+                <button type="button" className="text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 border border-dark-border px-4 py-2 rounded-lg transition-colors">
+                  {t('common_choose_file')}
+                </button>
+                <button type="button" className="text-sm font-medium text-red-400 hover:text-red-300 px-2 py-2 transition-colors">
+                  {t('common_remove')}
+                </button>
               </div>
             </div>
           </div>
@@ -128,31 +137,38 @@ const CreatePersonnel: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <User size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+              <h3 className="text-lg font-semibold text-white">{t('section_personal_information')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Full Name <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_full_name')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={fullname}
                   onChange={(e) => setFullname(e.target.value)}
                   required
-                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Sarah Connor" 
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  placeholder={t('placeholder_fullname_example')}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Email Address <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_email_address')} <span className="text-primary">*</span>
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <input
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" type="email" placeholder="sarah@company.com" 
+                    className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                    type="email"
+                    placeholder={t('placeholder_email_example')}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Workplace</label>
+                <label className="text-sm font-medium text-gray-300">{t('workplace')}</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <select
@@ -160,7 +176,7 @@ const CreatePersonnel: React.FC = () => {
                     onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
                   >
-                    <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                    <option value="">{workplacesLoading ? t('workplace_loading') : t('workplace_select_optional')}</option>
                     {workplaces.map((workplace) => (
                       <option key={workplace.id} value={workplace.id}>
                         {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
@@ -180,27 +196,30 @@ const CreatePersonnel: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <BadgeCheck size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Role & Responsibilities</h3>
+              <h3 className="text-lg font-semibold text-white">{t('section_role_responsibilities')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_position_title')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   required
-                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="e.g. Senior Frontend Engineer" 
+                  className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
+                  placeholder={t('placeholder_position_example')}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Role</label>
+                <label className="text-sm font-medium text-gray-300">{t('label_role')}</label>
                 <div className="relative">
                   <select
                     value={role}
                     disabled
                     className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-not-allowed appearance-none"
                   >
-                    <option value={-1}>Personnel Role</option>
+                    <option value={-1}>{t('role_personnel')}</option>
                   </select>
                   <Lock className="absolute right-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                 </div>
@@ -215,10 +234,10 @@ const CreatePersonnel: React.FC = () => {
             onClick={() => navigate('/personnel')}
             className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
           >
-            Cancel
+            {t('common_cancel')}
           </button>
           <button type="submit" disabled={loading} className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-            {loading ? 'Saving...' : <><Save size={18} /><span>Save Personnel</span></>}
+            {loading ? t('common_saving') : <><Save size={18} /><span>{t('personnel_save_button')}</span></>}
           </button>
         </div>
       </form>

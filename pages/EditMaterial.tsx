@@ -12,6 +12,7 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { materialService } from '../src/services/materialService';
 import Breadcrumb from '../components/Breadcrumb';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 interface MaterialType {
   id: number;
@@ -19,6 +20,7 @@ interface MaterialType {
 }
 
 const EditMaterial: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -67,7 +69,7 @@ const EditMaterial: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!id) {
-        setError("No material ID provided.");
+        setError(t('materials_error_missing_id'));
         setLoading(false);
         return;
       }
@@ -95,7 +97,7 @@ const EditMaterial: React.FC = () => {
         setOriginalMinimumThreshold(material.minimum_threshold || '');
         setOriginalMaterialTypeId(material.material_type_id || '');
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch material data.');
+        setError(err.message || t('materials_error_fetch'));
       }
       setLoading(false);
     };
@@ -112,7 +114,7 @@ const EditMaterial: React.FC = () => {
       setIsModalOpen(false);
       setNewMaterialType('');
     } catch (err) {
-      setError('Failed to create new material type.');
+      setError(t('material_types_error_create'));
     }
   };
 
@@ -130,7 +132,7 @@ const EditMaterial: React.FC = () => {
       await materialService.deleteMaterial(id);
       navigate('/materials');
     } catch (err: any) {
-      setError(err.message || 'Failed to delete material.');
+      setError(err.message || t('materials_error_delete'));
       setIsDeleting(false);
       toggleDeleteModal();
     }
@@ -163,7 +165,7 @@ const EditMaterial: React.FC = () => {
 
       navigate('/materials');
     } catch (err: any) {
-      setError(err.message || 'Failed to update material.');
+      setError(err.message || t('materials_error_update'));
     }
     setIsSubmitting(false);
   };
@@ -181,13 +183,13 @@ const EditMaterial: React.FC = () => {
       <div className="max-w-5xl mx-auto flex flex-col gap-8">
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-4 flex flex-col items-center gap-3">
           <AlertCircle size={40} />
-          <h3 className="text-xl font-bold">Error</h3>
+          <h3 className="text-xl font-bold">{t('common_error')}</h3>
           <span>{error}</span>
           <button 
             onClick={() => navigate('/materials')}
             className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg"
           >
-            Back to Materials
+            {t('materials_back')}
           </button>
         </div>
       </div>
@@ -199,8 +201,8 @@ const EditMaterial: React.FC = () => {
       <div className="flex flex-col gap-6">
         <Breadcrumb />
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Edit Material</h1>
-          <p className="text-dark-muted text-base max-w-3xl">Update the material information in the inventory. Changes are indicated and can be saved.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{t('materials_edit_title')}</h1>
+          <p className="text-dark-muted text-base max-w-3xl">{t('materials_edit_subtitle')}</p>
         </div>
       </div>
 
@@ -218,22 +220,26 @@ const EditMaterial: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <Box size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Material Details</h3>
+              <h3 className="text-lg font-semibold text-white">{t('materials_details_title')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-300">Material Name <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('materials_label_name')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  placeholder="e.g. 1/2 inch PVC Pipe" 
+                  placeholder={t('materials_placeholder_name')} 
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Material Type <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('material_type')} <span className="text-primary">*</span>
+                </label>
                 <div className="flex gap-2">
                   <div className="relative flex-grow">
                     <select 
@@ -242,7 +248,7 @@ const EditMaterial: React.FC = () => {
                       required
                       className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none"
                     >
-                      <option value="">Select a type</option>
+                      <option value="">{t('material_types_select')}</option>
                       {materialTypes.map(type => (
                         <option key={type.id} value={type.id}>{type.title}</option>
                       ))}
@@ -260,18 +266,20 @@ const EditMaterial: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Unit of Measurement <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('materials_label_unit')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  placeholder="e.g. pcs, kg, m" 
+                  placeholder={t('materials_placeholder_unit')} 
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Current Quantity</label>
+                <label className="text-sm font-medium text-gray-300">{t('materials_label_current_qty')}</label>
                 <input 
                   type="number"
                   value={quantity}
@@ -282,13 +290,13 @@ const EditMaterial: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Minimum Threshold</label>
+                <label className="text-sm font-medium text-gray-300">{t('materials_label_min_threshold')}</label>
                 <input 
                   type="number"
                   value={minimumThreshold}
                   onChange={(e) => setMinimumThreshold(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  placeholder="Optional"
+                  placeholder={t('common_optional')}
                 />
               </div>
             </div>
@@ -302,7 +310,7 @@ const EditMaterial: React.FC = () => {
               onClick={toggleDeleteModal}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 transition-all rounded-lg"
             >
-              Delete Material
+              {t('materials_delete_button')}
             </button>
           </div>
           <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 w-full sm:w-auto">
@@ -311,15 +319,15 @@ const EditMaterial: React.FC = () => {
               onClick={() => navigate('/materials')}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
             >
-              Cancel
+              {t('common_cancel')}
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting || !hasChanges}
-              title={!hasChanges ? "No changes made" : "Save changes"}
+              title={!hasChanges ? t('common_no_changes') : t('common_save_changes')}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : <><Save size={18} /><span>Save Changes</span></>}
+              {isSubmitting ? t('common_saving') : <><Save size={18} /><span>{t('common_save_changes')}</span></>}
             </button>
           </div>
         </div>
@@ -329,7 +337,7 @@ const EditMaterial: React.FC = () => {
         <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 animate-in fade-in">
           <div className="bg-dark-surface rounded-2xl border border-dark-border shadow-2xl p-8 max-w-sm w-full m-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-white">Add New Material Type</h3>
+              <h3 className="text-lg font-semibold text-white">{t('material_types_add_title')}</h3>
               <button 
                 onClick={() => setIsModalOpen(false)}
                 className="text-dark-muted hover:text-white transition-colors"
@@ -339,19 +347,19 @@ const EditMaterial: React.FC = () => {
             </div>
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Type Name</label>
+                <label className="text-sm font-medium text-gray-300">{t('material_types_label_name')}</label>
                 <input
                   value={newMaterialType}
                   onChange={(e) => setNewMaterialType(e.target.value)}
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all"
-                  placeholder="e.g. Piping, Fasteners"
+                  placeholder={t('material_types_placeholder')}
                 />
               </div>
               <button
                 onClick={handleCreateNewType}
                 className="w-full px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg transition-all"
               >
-                Create Type
+                {t('material_types_create_button')}
               </button>
             </div>
           </div>
@@ -365,9 +373,9 @@ const EditMaterial: React.FC = () => {
               <div className="p-3 bg-red-500/10 rounded-full border-4 border-red-500/20 mb-4">
                 <Trash2 size={32} className="text-red-500" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Confirm Deletion</h2>
+              <h2 className="text-2xl font-bold text-white">{t('materials_delete_confirm_title')}</h2>
               <p className="text-dark-muted mt-2">
-                Are you sure you want to delete this material? This action cannot be undone.
+                {t('materials_delete_confirm_body')}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-8">
@@ -376,14 +384,14 @@ const EditMaterial: React.FC = () => {
                 disabled={isDeleting}
                 className="px-6 py-3 text-sm font-medium text-dark-muted hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-all disabled:opacity-50"
               >
-                Cancel
+                {t('common_cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="px-6 py-3 text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                {isDeleting ? t('common_deleting') : t('common_confirm_delete')}
               </button>
             </div>
           </div>

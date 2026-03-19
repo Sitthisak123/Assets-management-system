@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../components/Breadcrumb';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 type StockFilterValue = 'all' | 'in' | 'low' | 'out';
 
@@ -34,6 +35,7 @@ const defaultMaterialFilters: MaterialFilters = {
 };
 
 const Materials: React.FC = () => {
+  const { t } = useLanguage();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ const Materials: React.FC = () => {
       const response = await materialService.getMaterials();
       setMaterials(Array.isArray(response.data) ? response.data : []);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to fetch materials');
+      setError(err.response?.data?.message || err.message || t('materials_error_fetch'));
       setMaterials([]);
     } finally {
       setLoading(false);
@@ -77,12 +79,12 @@ const Materials: React.FC = () => {
     const stockLevel = getStockLevel(quantity, minimumThreshold);
     switch (stockLevel) {
       case 'out':
-        return { text: 'Out of Stock', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+        return { text: t('stock_out'), className: 'bg-red-500/10 text-red-400 border-red-500/20' };
       case 'low':
-        return { text: 'Low Stock', className: 'bg-orange-500/10 text-orange-400 border-orange-500/20' };
+        return { text: t('stock_low'), className: 'bg-orange-500/10 text-orange-400 border-orange-500/20' };
       case 'in':
       default:
-        return { text: 'In Stock', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+        return { text: t('stock_in'), className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
     }
   };
 
@@ -92,7 +94,7 @@ const Materials: React.FC = () => {
     materials.forEach((item) => {
       const resolvedId = Number(item.material_type?.id ?? item.material_type_id);
       if (!Number.isFinite(resolvedId)) return;
-      const resolvedTitle = item.material_type?.title?.trim() || `Type #${resolvedId}`;
+      const resolvedTitle = item.material_type?.title?.trim() || `${t('material_type')} #${resolvedId}`;
       typeMap.set(resolvedId, resolvedTitle);
     });
 
@@ -224,7 +226,7 @@ const Materials: React.FC = () => {
         material_type: latestMaterial.material_type ?? material.material_type,
       });
     } catch (err: any) {
-      setAddQtyError(err.response?.data?.message || err.message || 'Failed to load latest material data.');
+      setAddQtyError(err.response?.data?.message || err.message || t('materials_error_load_latest'));
     } finally {
       setIsAddQtyLoading(false);
     }
@@ -233,13 +235,13 @@ const Materials: React.FC = () => {
   const handleAddQtySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedMaterial) {
-      setAddQtyError('Material not found.');
+      setAddQtyError(t('materials_error_not_found'));
       return;
     }
 
     const parsedAddValue = Number(addQtyValue);
     if (!Number.isInteger(parsedAddValue) || parsedAddValue <= 0) {
-      setAddQtyError('Add value must be a positive integer.');
+      setAddQtyError(t('materials_error_invalid_add_qty'));
       return;
     }
 
@@ -272,7 +274,7 @@ const Materials: React.FC = () => {
       setAddQtyValue('');
       setAddQtyError(null);
     } catch (err: any) {
-      setAddQtyError(err.response?.data?.message || err.message || 'Failed to add quantity.');
+      setAddQtyError(err.response?.data?.message || err.message || t('materials_error_add_qty'));
     } finally {
       setIsAddQtySubmitting(false);
     }
@@ -294,18 +296,18 @@ const Materials: React.FC = () => {
         <div className="flex flex-wrap items-center gap-3">
           <Link to="/materials/types" className="flex items-center justify-center gap-2 bg-dark-surface border border-dark-border hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg transition-all font-medium whitespace-nowrap">
             <Tags size={18} />
-            <span>Material Type</span>
+            <span>{t('material_type')}</span>
           </Link>
           <Link to="/materials/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
             <Plus size={20} />
-            <span>Material</span>
+            <span>{t('materials_add_button')}</span>
           </Link>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold text-white tracking-tight">Material Directory</h2>
-        <p className="text-dark-muted text-sm max-w-2xl">Manage your inventory items, stock levels, and procurement needs efficiently.</p>
+        <h2 className="text-3xl font-bold text-white tracking-tight">{t('materials_directory_title')}</h2>
+        <p className="text-dark-muted text-sm max-w-2xl">{t('materials_directory_subtitle')}</p>
       </div>
 
       {successMessage && (
@@ -323,7 +325,7 @@ const Materials: React.FC = () => {
             <Box className="text-blue-600" />
           </div>
           <div>
-            <p className="text-sm text-dark-muted">Total SKUs</p>
+            <p className="text-sm text-dark-muted">{t('materials_stat_total_skus')}</p>
             <p className="text-2xl font-bold text-white">{loading ? '...' : totalSKUs}</p>
           </div>
         </div>
@@ -332,7 +334,7 @@ const Materials: React.FC = () => {
             <Box className="text-orange-600" />
           </div>
           <div>
-            <p className="text-sm text-dark-muted">Low Stock</p>
+            <p className="text-sm text-dark-muted">{t('stock_low')}</p>
             <p className="text-2xl font-bold text-white">{loading ? '...' : lowStockCount}</p>
           </div>
         </div>
@@ -341,7 +343,7 @@ const Materials: React.FC = () => {
             <Box className="text-red-600" />
           </div>
           <div>
-            <p className="text-sm text-dark-muted">Out of Stock</p>
+            <p className="text-sm text-dark-muted">{t('stock_out')}</p>
             <p className="text-2xl font-bold text-white">{loading ? '...' : outOfStock}</p>
           </div>
         </div>
@@ -354,7 +356,7 @@ const Materials: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-900/50 border border-dark-border text-white text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10 py-2.5 placeholder:text-dark-muted transition-all" 
-            placeholder="Search by name, SKU, or category..." 
+            placeholder={t('materials_search_placeholder')} 
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -364,7 +366,7 @@ const Materials: React.FC = () => {
             className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-dark-border rounded-lg hover:border-primary/50 transition-all text-sm font-medium text-slate-300"
           >
             <Filter size={16} />
-            <span>{activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}</span>
+            <span>{activeFilterCount > 0 ? `${t('common_filters')} (${activeFilterCount})` : t('common_filters')}</span>
             <ChevronRight size={14} className="rotate-90" />
           </button>
           {(activeFilterCount > 0 || searchQuery.trim()) && (
@@ -377,7 +379,7 @@ const Materials: React.FC = () => {
               className="flex items-center gap-2 px-3 py-2 bg-slate-900 border border-dark-border rounded-lg hover:border-primary/50 transition-all text-sm font-medium text-slate-300"
             >
               <X size={14} />
-              <span>Reset</span>
+              <span>{t('common_reset')}</span>
             </button>
           )}
         </div>
@@ -391,26 +393,26 @@ const Materials: React.FC = () => {
             </div>
           ) : error ? (
             <div className="flex justify-center items-center h-64 text-red-500">
-              Error: {error}
+              {t('common_error')}: {error}
             </div>
           ) : (
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-900/40 border-b border-dark-border">
                   <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider w-16">#</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Material</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Category</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Quantity</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Unit</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Status</th>
-                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Actions</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('materials_table_material')}</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('materials_table_category')}</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">{t('materials_table_quantity')}</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('materials_table_unit')}</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('common_status')}</th>
+                  <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">{t('common_actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-dark-border">
                 {filteredMaterials.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="py-10 px-6 text-center text-dark-muted">
-                      No materials match your current search/filter.
+                      {t('materials_empty')}
                     </td>
                   </tr>
                 ) : (
@@ -430,7 +432,7 @@ const Materials: React.FC = () => {
                       </td>
                       <td className="py-4 px-6">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                          {material.material_type?.title || 'N/A'}
+                          {material.material_type?.title || t('not_available')}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right">
@@ -450,7 +452,7 @@ const Materials: React.FC = () => {
                             type="button"
                             onClick={() => openAddQtyModal(material)}
                             className="p-1.5 text-dark-muted hover:text-emerald-400 hover:bg-emerald-500/10 rounded-md transition-colors"
-                            title="Add quantity"
+                            title={t('materials_add_qty')}
                           >
                             <Plus size={18} />
                           </button>
@@ -466,15 +468,19 @@ const Materials: React.FC = () => {
         </div>
         <div className="bg-dark-surface px-6 py-4 border-t border-dark-border flex items-center justify-between">
           <p className="text-sm text-dark-muted">
-            Showing{' '}
-            <span className="font-medium text-white">{filteredMaterials.length}</span>
-            {' '}of{' '}
-            <span className="font-medium text-white">{materials.length}</span>
-            {' '}results
+            {t('common_showing')}{' '}
+            <span className="font-medium text-white">{filteredMaterials.length}</span>{' '}
+            {t('common_of')}{' '}
+            <span className="font-medium text-white">{materials.length}</span>{' '}
+            {t('common_results')}
           </p>
           <div className="flex items-center gap-2">
-            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 disabled:opacity-50 transition-colors" disabled>Previous</button>
-            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 transition-colors">Next</button>
+            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 disabled:opacity-50 transition-colors" disabled>
+              {t('common_previous')}
+            </button>
+            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 transition-colors">
+              {t('common_next')}
+            </button>
           </div>
         </div>
       </div>
@@ -483,12 +489,12 @@ const Materials: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-2xl rounded-xl bg-dark-surface border border-dark-border shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border">
-              <h3 className="text-white text-lg font-semibold">Inventory Filters</h3>
+              <h3 className="text-white text-lg font-semibold">{t('materials_filters_title')}</h3>
               <button
                 type="button"
                 onClick={() => setIsFilterModalOpen(false)}
                 className="p-1.5 rounded-md text-dark-muted hover:text-white hover:bg-slate-800 transition-colors"
-                aria-label="Close filter modal"
+                aria-label={t('common_close')}
               >
                 <X size={18} />
               </button>
@@ -496,13 +502,13 @@ const Materials: React.FC = () => {
 
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm text-dark-muted">Material Type</label>
+                <label className="text-sm text-dark-muted">{t('material_type')}</label>
                 <select
                   value={draftFilters.typeId}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, typeId: e.target.value }))}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none"
                 >
-                  <option value="all">All Types</option>
+                  <option value="all">{t('materials_all_types')}</option>
                   {materialTypeOptions.map((option) => (
                     <option key={option.id} value={String(option.id)}>
                       {option.title}
@@ -512,27 +518,27 @@ const Materials: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-dark-muted">Stock Status</label>
+                <label className="text-sm text-dark-muted">{t('materials_stock_status')}</label>
                 <select
                   value={draftFilters.stock}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, stock: e.target.value as StockFilterValue }))}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none"
                 >
-                  <option value="all">All Status</option>
-                  <option value="in">In Stock</option>
-                  <option value="low">Low Stock</option>
-                  <option value="out">Out of Stock</option>
+                  <option value="all">{t('common_all_status')}</option>
+                  <option value="in">{t('stock_in')}</option>
+                  <option value="low">{t('stock_low')}</option>
+                  <option value="out">{t('stock_out')}</option>
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-dark-muted">Unit</label>
+                <label className="text-sm text-dark-muted">{t('materials_unit')}</label>
                 <select
                   value={draftFilters.unit}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, unit: e.target.value }))}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none"
                 >
-                  <option value="all">All Units</option>
+                  <option value="all">{t('materials_all_units')}</option>
                   {unitOptions.map((unitValue) => (
                     <option key={unitValue} value={unitValue}>
                       {unitValue}
@@ -543,7 +549,7 @@ const Materials: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <label className="text-sm text-dark-muted">Min Qty</label>
+                  <label className="text-sm text-dark-muted">{t('materials_min_qty')}</label>
                   <input
                     type="number"
                     min={0}
@@ -554,7 +560,7 @@ const Materials: React.FC = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-dark-muted">Max Qty</label>
+                  <label className="text-sm text-dark-muted">{t('materials_max_qty')}</label>
                   <input
                     type="number"
                     min={0}
@@ -573,7 +579,7 @@ const Materials: React.FC = () => {
                 onClick={() => setDraftFilters(defaultMaterialFilters)}
                 className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-slate-800 transition-colors text-sm"
               >
-                Clear
+                {t('common_clear')}
               </button>
               <div className="flex items-center gap-3">
                 <button
@@ -581,14 +587,14 @@ const Materials: React.FC = () => {
                   onClick={() => setIsFilterModalOpen(false)}
                   className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-slate-800 transition-colors text-sm"
                 >
-                  Cancel
+                  {t('common_cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={applyFilters}
                   className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-colors"
                 >
-                  Apply Filters
+                  {t('common_apply_filters')}
                 </button>
               </div>
             </div>
@@ -601,15 +607,15 @@ const Materials: React.FC = () => {
           <div className="w-full max-w-lg rounded-xl bg-dark-surface border border-dark-border shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border">
               <div>
-                <h3 className="text-white text-lg font-semibold">Add QTY.</h3>
-                <p className="text-xs text-dark-muted mt-1">Increase quantity for a material item using the dedicated API.</p>
+                <h3 className="text-white text-lg font-semibold">{t('materials_add_qty_title')}</h3>
+                <p className="text-xs text-dark-muted mt-1">{t('materials_add_qty_subtitle')}</p>
               </div>
               <button
                 type="button"
                 onClick={closeAddQtyModal}
                 disabled={isAddQtySubmitting}
                 className="p-1.5 rounded-md text-dark-muted hover:text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
-                aria-label="Close add quantity modal"
+                aria-label={t('common_close')}
               >
                 <X size={18} />
               </button>
@@ -622,30 +628,32 @@ const Materials: React.FC = () => {
                 </div>
               ) : !selectedMaterial ? (
                 <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                  Unable to load material details.
+                  {t('materials_error_load_details')}
                 </div>
               ) : (
                 <form onSubmit={handleAddQtySubmit} className="space-y-5">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="rounded-lg border border-dark-border bg-dark-bg/70 px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-wider text-dark-muted">Item Name</p>
+                      <p className="text-[11px] uppercase tracking-wider text-dark-muted">{t('materials_item_name')}</p>
                       <p className="text-sm font-medium text-white mt-1">{selectedMaterial.title}</p>
                       <p className="text-[11px] text-dark-muted mt-1">SKU-{selectedMaterial.id}</p>
                     </div>
                     <div className="rounded-lg border border-dark-border bg-dark-bg/70 px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-wider text-dark-muted">Material Type</p>
-                      <p className="text-sm font-medium text-white mt-1">{selectedMaterial.material_type?.title || `Type #${selectedMaterial.material_type_id}`}</p>
+                      <p className="text-[11px] uppercase tracking-wider text-dark-muted">{t('material_type')}</p>
+                      <p className="text-sm font-medium text-white mt-1">
+                        {selectedMaterial.material_type?.title || `${t('material_type')} #${selectedMaterial.material_type_id}`}
+                      </p>
                       <p className="text-[11px] text-dark-muted mt-1">{selectedMaterial.unit}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-wider text-blue-300/80">Last Value</p>
+                      <p className="text-[11px] uppercase tracking-wider text-blue-300/80">{t('materials_last_value')}</p>
                       <p className="text-2xl font-bold text-white mt-1">{selectedMaterial.quantity}</p>
                     </div>
                     <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-wider text-emerald-300/80">Add Value</p>
+                      <p className="text-[11px] uppercase tracking-wider text-emerald-300/80">{t('materials_add_value')}</p>
                       <input
                         type="number"
                         min={1}
@@ -660,7 +668,7 @@ const Materials: React.FC = () => {
                       />
                     </div>
                     <div className="rounded-lg border border-primary/20 bg-primary/10 px-4 py-3">
-                      <p className="text-[11px] uppercase tracking-wider text-primary/80">New Value</p>
+                      <p className="text-[11px] uppercase tracking-wider text-primary/80">{t('materials_new_value')}</p>
                       <p className="text-2xl font-bold text-white mt-1">{addQtyPreview ?? '-'}</p>
                     </div>
                   </div>
@@ -679,7 +687,7 @@ const Materials: React.FC = () => {
                       disabled={isAddQtySubmitting}
                       className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-slate-800 transition-colors text-sm disabled:opacity-50"
                     >
-                      Cancel
+                      {t('common_cancel')}
                     </button>
                     <button
                       type="submit"
@@ -687,7 +695,7 @@ const Materials: React.FC = () => {
                       className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center gap-2"
                     >
                       {isAddQtySubmitting ? <Loader size={16} className="animate-spin" /> : <Plus size={16} />}
-                      <span>{isAddQtySubmitting ? 'Updating...' : 'Add Quantity'}</span>
+                      <span>{isAddQtySubmitting ? t('common_updating') : t('materials_add_qty')}</span>
                     </button>
                   </div>
                 </form>

@@ -64,45 +64,45 @@ const Layout: React.FC = () => {
     const role = currentUser?.role ?? 0;
     switch (role) {
       case 1:
-        return { name: 'Administrator', access: 'Full Access' };
+        return { name: t('role_admin'), access: t('access_full') };
       case 0:
-        return { name: 'User', access: 'Standard Access' };
+        return { name: t('role_user'), access: t('access_standard') };
       case -1:
-        return { name: 'Personnel', access: 'N/A' };
+        return { name: t('role_personnel'), access: t('access_na') };
       default:
-        return { name: 'Unknown', access: 'N/A' };
+        return { name: t('role_unknown'), access: t('access_na') };
     }
-  }, [currentUser?.role]);
+  }, [currentUser?.role, t]);
 
   const statusInfo = useMemo(() => {
     const status = currentUser?.status ?? 1;
     switch (status) {
       case 1:
         return {
-          text: 'Active',
+          text: t('status_active'),
           className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
           dotClassName: 'bg-emerald-500 animate-pulse',
         };
       case 0:
         return {
-          text: 'Inactive',
+          text: t('status_inactive'),
           className: 'bg-slate-500/10 text-dark-muted border-dark-border',
           dotClassName: 'bg-slate-500',
         };
       case -1:
         return {
-          text: 'Suspended',
+          text: t('status_suspended'),
           className: 'bg-red-500/10 text-red-500 border-red-500/20',
           dotClassName: 'bg-red-500',
         };
       default:
         return {
-          text: 'Unknown',
+          text: t('status_unknown'),
           className: 'bg-gray-500/10 text-gray-400 border-gray-500/20',
           dotClassName: 'bg-gray-500',
         };
     }
-  }, [currentUser?.status]);
+  }, [currentUser?.status, t]);
 
   const roleAvatarColor = useMemo(() => {
     const role = currentUser?.role ?? 0;
@@ -144,10 +144,10 @@ const Layout: React.FC = () => {
       return [currentUser.workplace.building, currentUser.workplace.room].filter(Boolean).join(' / ');
     }
     if (currentUser?.workplace_id) {
-      return `Workplace #${currentUser.workplace_id}`;
+      return `${t('workplace')} #${currentUser.workplace_id}`;
     }
-    return 'No workplace';
-  }, [currentUser?.workplace?.building, currentUser?.workplace?.room, currentUser?.workplace_id]);
+    return t('no_workplace');
+  }, [currentUser?.workplace?.building, currentUser?.workplace?.room, currentUser?.workplace_id, t]);
 
   const handleLogout = () => {
     authService.logout();
@@ -245,7 +245,7 @@ const Layout: React.FC = () => {
                             <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-blue-500/10 text-blue-400">
                               <Mail size={14} />
                             </span>
-                            <span className="truncate">{currentUser?.email || 'No email'}</span>
+                            <span className="truncate">{currentUser?.email || t('no_email')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="inline-flex items-center justify-center h-6 w-6 rounded-md bg-emerald-500/10 text-emerald-400">

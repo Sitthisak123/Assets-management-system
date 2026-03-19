@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Search, X } from 'lucide-react';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 type MaterialOption = {
   id: number;
@@ -23,9 +24,10 @@ const MaterialSearchSelect: React.FC<MaterialSearchSelectProps> = ({
   value,
   disabledMaterialIds,
   onSelect,
-  placeholder = 'Search and select material...',
+  placeholder,
   onOpenChange,
 }) => {
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputWrapRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -130,6 +132,8 @@ const MaterialSearchSelect: React.FC<MaterialSearchSelectProps> = ({
     return ranked.map((item) => item.material);
   }, [materials, query]);
 
+  const resolvedPlaceholder = placeholder ?? t('material_search_placeholder');
+
   return (
     <div className="relative z-40" ref={containerRef}>
       <div className="relative" ref={inputWrapRef}>
@@ -144,7 +148,7 @@ const MaterialSearchSelect: React.FC<MaterialSearchSelectProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Escape') setIsOpen(false);
           }}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           className="w-full bg-dark-bg border border-dark-border rounded-lg pl-9 pr-10 py-2 text-sm text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none"
         />
         {value !== null && (
@@ -156,7 +160,7 @@ const MaterialSearchSelect: React.FC<MaterialSearchSelectProps> = ({
               setIsOpen(false);
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white transition-colors"
-            title="Clear selected material"
+            title={t('material_clear_selected')}
           >
             <X size={14} />
           </button>
@@ -176,7 +180,7 @@ const MaterialSearchSelect: React.FC<MaterialSearchSelectProps> = ({
           className="max-h-56 overflow-auto rounded-lg border border-dark-border bg-dark-bg shadow-2xl"
         >
           {filteredMaterials.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-dark-muted">No material found.</p>
+            <p className="px-3 py-2 text-sm text-dark-muted">{t('material_no_results')}</p>
           ) : (
             filteredMaterials.map((material) => {
               const isSelected = material.id === value;
@@ -207,8 +211,10 @@ const MaterialSearchSelect: React.FC<MaterialSearchSelectProps> = ({
                   </div>
                   <div className="text-[11px] text-dark-muted">
                     SKU-{material.id}
-                    {typeof material.quantity === 'number' ? `  |  Stock: ${material.quantity}${material.unit ? ` ${material.unit}` : ''}` : ''}
-                    {isDisabled ? '  |  Already selected' : ''}
+                    {typeof material.quantity === 'number'
+                      ? `  |  ${t('material_stock')}: ${material.quantity}${material.unit ? ` ${material.unit}` : ''}`
+                      : ''}
+                    {isDisabled ? `  |  ${t('material_already_selected')}` : ''}
                   </div>
                 </button>
               );

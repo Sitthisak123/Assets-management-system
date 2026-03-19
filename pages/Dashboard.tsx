@@ -24,8 +24,10 @@ import { personnelService } from '../src/services/personnelService';
 import { requisitionService } from '../src/services/requisitionService';
 import { materialService } from '../src/services/materialService';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [personnelCount, setPersonnelCount] = useState<number | null>(null);
   const [pendingRequisitions, setPendingRequisitions] = useState<number | null>(null);
   const [lowStockCount, setLowStockCount] = useState<number | null>(null);
@@ -72,35 +74,35 @@ const Dashboard: React.FC = () => {
 
   const stats = [
     { 
-      label: 'Total Personnel', 
+      label: t('dashboard_total_personnel_label'), 
       value: personnelCount !== null ? personnelCount.toString() : '...', 
       change: '+2.4%', 
       trend: 'up', 
       icon: <Users className="text-primary" />,
-      subtext: 'Active employees this month'
+      subtext: t('dashboard_total_personnel_subtext')
     },
     { 
-      label: 'Pending Req.', 
+      label: t('dashboard_pending_req_label'), 
       value: pendingRequisitions !== null ? pendingRequisitions.toString() : '...', 
       change: '+5.1%', 
       trend: 'up', 
       icon: <FileCheck className="text-orange-500" />,
-      subtext: 'Awaiting manager approval'
+      subtext: t('dashboard_pending_req_subtext')
     },
     { 
-      label: 'Low Stock', 
+      label: t('dashboard_low_stock_label'), 
       value: lowStockCount !== null ? lowStockCount.toString() : '...',
       change: '-1.2%', 
       trend: 'down', 
       icon: <AlertTriangle className="text-orange-500" />,
-      subtext: 'Items below minimum threshold'
+      subtext: t('dashboard_low_stock_subtext')
     },
     { 
-      label: 'Out of Stock', 
+      label: t('dashboard_out_stock_label'), 
       value: outOfStockCount !== null ? outOfStockCount.toString() : '...', 
-      status: 'FIX', 
+      status: t('dashboard_fix'), 
       icon: <AlertTriangle className="text-red-500" />,
-      subtext: 'Items with zero quantity'
+      subtext: t('dashboard_out_stock_subtext')
     },
   ];
 
@@ -141,12 +143,16 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-2 rounded-xl bg-dark-surface p-6 border border-dark-border shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="text-white text-lg font-bold leading-tight">Requisition Volume</h3>
-              <p className="text-dark-muted text-xs mt-1">Monthly requests over last 6 months</p>
+              <h3 className="text-white text-lg font-bold leading-tight">{t('dashboard_requisition_volume')}</h3>
+              <p className="text-dark-muted text-xs mt-1">{t('dashboard_requisition_volume_subtext')}</p>
             </div>
             <div className="flex gap-2">
-              <button className="px-3 py-1.5 rounded-lg border border-dark-border text-xs font-medium text-dark-muted hover:text-white hover:bg-slate-700 transition-colors">This Year</button>
-              <button className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors">Last 6M</button>
+              <button className="px-3 py-1.5 rounded-lg border border-dark-border text-xs font-medium text-dark-muted hover:text-white hover:bg-slate-700 transition-colors">
+                {t('dashboard_this_year')}
+              </button>
+              <button className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors">
+                {t('dashboard_last_6m')}
+              </button>
             </div>
           </div>
           <div className="h-[300px] w-full">
@@ -167,8 +173,8 @@ const Dashboard: React.FC = () => {
 
         <div className="rounded-xl bg-dark-surface p-6 border border-dark-border flex flex-col shadow-sm">
           <div className="mb-2">
-            <h3 className="text-white text-lg font-bold leading-tight">Inventory Distribution</h3>
-            <p className="text-dark-muted text-xs mt-1">Breakdown by category</p>
+            <h3 className="text-white text-lg font-bold leading-tight">{t('dashboard_inventory_distribution')}</h3>
+            <p className="text-dark-muted text-xs mt-1">{t('dashboard_inventory_distribution_subtext')}</p>
           </div>
           <div className="flex-1 flex items-center justify-center relative min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -192,7 +198,7 @@ const Dashboard: React.FC = () => {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className={`${totalPieValue > 99999 ? 'text-3x2' : 'text-3xl'} font-bold text-white`}>{totalPieValue}</span>
-              <span className="text-xs text-dark-muted uppercase tracking-widest mt-1">Items</span>
+              <span className="text-xs text-dark-muted uppercase tracking-widest mt-1">{t('dashboard_items_label')}</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3 mt-4">
@@ -211,9 +217,9 @@ const Dashboard: React.FC = () => {
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-white text-lg font-bold leading-tight tracking-tight">Recent Activity</h3>
+          <h3 className="text-white text-lg font-bold leading-tight tracking-tight">{t('dashboard_recent_activity')}</h3>
           <Link to="/requisitions" className="text-sm text-primary font-medium hover:text-primary-dark transition-colors flex items-center gap-1 group">
-            View All 
+            {t('common_view_all')}{' '}
             <ArrowRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
@@ -222,11 +228,11 @@ const Dashboard: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-800/50 border-b border-dark-border">
-                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">Req ID</th>
-                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">Requester</th>
-                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">Item</th>
-                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">Date</th>
-                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted text-right">Status</th>
+                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">{t('dashboard_table_req_id')}</th>
+                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">{t('dashboard_table_requester')}</th>
+                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">{t('dashboard_table_item')}</th>
+                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted">{t('dashboard_table_date')}</th>
+                  <th className="py-3.5 px-6 text-xs font-semibold uppercase tracking-wider text-dark-muted text-right">{t('common_status')}</th>
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-dark-border">
@@ -251,7 +257,7 @@ const Dashboard: React.FC = () => {
                           req.status === 'Approved' ? 'bg-emerald-400' : 
                           req.status === 'Pending' ? 'bg-orange-400' : 
                           'bg-red-400'
-                        }`}></span> {req.status}
+                        }`}></span> {req.status === 'Approved' ? t('status_approved') : req.status === 'Pending' ? t('status_pending') : t('status_rejected')}
                       </span>
                     </td>
                   </tr>

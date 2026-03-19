@@ -15,8 +15,10 @@ import {
   Edit2,
   Eye
 } from 'lucide-react';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const Users: React.FC = () => {
+  const { t } = useLanguage();
   const [profiles, setProfiles] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ const Users: React.FC = () => {
 
       setProfiles(users);
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to fetch users');
+      setError(err.response?.data?.message || err.message || t('users_error_fetch'));
       setProfiles([]);
     } finally {
       setLoading(false);
@@ -68,19 +70,19 @@ const Users: React.FC = () => {
 
   const getRoleInfo = (role: number) => {
     switch (role) {
-      case 1: return { name: 'Administrator', access: 'Full Access' };
-      case 0: return { name: 'User', access: 'Standard Access' };
-      case -1: return { name: 'Personnel', access: 'N/A' };
-      default: return { name: 'Unknown', access: 'N/A' };
+      case 1: return { name: t('role_admin'), access: t('access_full') };
+      case 0: return { name: t('role_user'), access: t('access_standard') };
+      case -1: return { name: t('role_personnel'), access: t('access_na') };
+      default: return { name: t('role_unknown'), access: t('access_na') };
     }
   };
 
   const getStatusInfo = (status: number) => {
     switch (status) {
-      case 1: return { text: 'Active', className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
-      case 0: return { text: 'Inactive', className: 'bg-slate-500/10 text-dark-muted border-dark-border' };
-      case -1: return { text: 'Suspended', className: 'bg-red-500/10 text-red-500 border-red-500/20' };
-      default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
+      case 1: return { text: t('status_active'), className: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' };
+      case 0: return { text: t('status_inactive'), className: 'bg-slate-500/10 text-dark-muted border-dark-border' };
+      case -1: return { text: t('status_suspended'), className: 'bg-red-500/10 text-red-500 border-red-500/20' };
+      default: return { text: t('status_unknown'), className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
     }
   };
 
@@ -103,9 +105,9 @@ const Users: React.FC = () => {
       return [user.workplace.building, user.workplace.room].filter(Boolean).join(' / ');
     }
     if (user.workplace_id) {
-      return `Workplace #${user.workplace_id}`;
+      return `${t('workplace')} #${user.workplace_id}`;
     }
-    return 'No workplace';
+    return t('no_workplace');
   };
 
   const totalUsers = profiles.length;
@@ -117,53 +119,53 @@ const Users: React.FC = () => {
     <div className="max-w-[1400px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <nav className="flex items-center gap-2 text-sm text-dark-muted">
-          <span className="hover:text-white transition-colors cursor-pointer">System</span>
+          <span className="hover:text-white transition-colors cursor-pointer">{t('system')}</span>
           <ChevronRight size={14} />
-          <span className="text-white font-medium">User Management</span>
+          <span className="text-white font-medium">{t('users_management')}</span>
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/workplaces" className="flex items-center justify-center gap-2 bg-dark-surface border border-dark-border hover:bg-slate-800 text-white px-4 py-2.5 rounded-lg transition-all font-medium whitespace-nowrap">
             <Building2 size={18} />
-            <span>Workplace</span>
+            <span>{t('workplace')}</span>
           </Link>
           <Link to="/users/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
             <Plus size={20} />
-            <span>User</span>
+            <span>{t('users_add_button')}</span>
           </Link>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h1 className="text-white text-3xl font-bold tracking-tight">Users & Roles</h1>
-        <p className="text-dark-muted text-base max-w-3xl">Manage user access levels, departmental assignments, and account statuses across the platform.</p>
+        <h1 className="text-white text-3xl font-bold tracking-tight">{t('users_title')}</h1>
+        <p className="text-dark-muted text-base max-w-3xl">{t('users_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500"><UsersIcon size={24} /></div>
-            <div>
-              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Total Users</p>
+          <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">{t('users_stat_total')}</p>
               <p className="text-white text-2xl font-bold">{loading ? '...' : totalUsers}</p>
             </div>
           </div>
           <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500"><CheckCircle size={24} /></div>
-            <div>
-              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Active Users</p>
+          <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">{t('users_stat_active')}</p>
               <p className="text-white text-2xl font-bold">{loading ? '...' : activeUsers}</p>
             </div>
           </div>
           <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500"><Shield size={24} /></div>
-            <div>
-              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Admins</p>
+          <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">{t('users_stat_admins')}</p>
               <p className="text-white text-2xl font-bold">{loading ? '...' : adminUsers}</p>
             </div>
           </div>
           <div className="bg-dark-surface border border-dark-border p-4 rounded-xl flex items-center gap-4 shadow-sm">
             <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500"><UserX size={24} /></div>
-            <div>
-              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">Inactive</p>
+          <div>
+              <p className="text-dark-muted text-xs uppercase font-semibold tracking-wider">{t('users_stat_inactive')}</p>
               <p className="text-white text-2xl font-bold">{loading ? '...' : inactiveUsers}</p>
             </div>
           </div>
@@ -176,7 +178,7 @@ const Users: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-10 pr-4 py-2.5 focus:ring-1 focus:ring-primary placeholder:text-slate-600 transition-all" 
-            placeholder="Search by name, email or ID..." 
+            placeholder={t('users_search_placeholder')} 
           />
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -185,20 +187,20 @@ const Users: React.FC = () => {
             onChange={(e) => setRoleFilter(e.target.value)}
             className="bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-3 pr-8 py-2.5 focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
           >
-            <option value="all">All Roles</option>
-            <option value="1">Administrator</option>
-            <option value="0">User</option>
-            <option value="-1">Personnel</option>
+            <option value="all">{t('users_all_roles')}</option>
+            <option value="1">{t('role_admin')}</option>
+            <option value="0">{t('role_user')}</option>
+            <option value="-1">{t('role_personnel')}</option>
           </select>
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             className="bg-dark-bg border border-dark-border text-white text-sm rounded-lg pl-3 pr-8 py-2.5 focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
           >
-            <option value="all">All Status</option>
-            <option value="1">Active</option>
-            <option value="0">Inactive</option>
-            <option value="-1">Suspended</option>
+            <option value="all">{t('common_all_status')}</option>
+            <option value="1">{t('status_active')}</option>
+            <option value="0">{t('status_inactive')}</option>
+            <option value="-1">{t('status_suspended')}</option>
           </select>
         </div>
       </div>
@@ -208,17 +210,17 @@ const Users: React.FC = () => {
           {loading ? (
             <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={40} /></div>
           ) : error ? (
-            <div className="text-red-500 p-6">Error: {error}</div>
+            <div className="text-red-500 p-6">{t('common_error')}: {error}</div>
           ) : (
           <table className="w-full text-left text-sm text-white">
             <thead className="bg-dark-bg/50 border-b border-dark-border text-dark-muted uppercase tracking-wider text-xs font-semibold">
               <tr>
                 <th className="px-6 py-4 w-16">#</th>
-                <th className="px-6 py-4">User</th>
-                <th className="px-6 py-4">Role</th>
-                <th className="px-6 py-4">Last Active</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4">{t('users_table_user')}</th>
+                <th className="px-6 py-4">{t('label_role')}</th>
+                <th className="px-6 py-4">{t('users_table_last_active')}</th>
+                <th className="px-6 py-4">{t('common_status')}</th>
+                <th className="px-6 py-4 text-right">{t('common_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
@@ -232,7 +234,9 @@ const Users: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-medium text-white">{p.fullname}</p>
-                        <p className="text-dark-muted text-xs">{p.username ? "@"+p.username : '<No Username>'} | {p.email || '<No Email>'}</p>
+                        <p className="text-dark-muted text-xs">
+                          {p.username ? `@${p.username}` : t('users_no_username')} | {p.email || t('no_email')}
+                        </p>
                         <p className="text-dark-muted text-xs">{getWorkplaceLabel(p)}</p>
                       </div>
                     </div>
@@ -243,7 +247,7 @@ const Users: React.FC = () => {
                       <span className="text-dark-muted text-xs">{getRoleInfo(p.role).access}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-dark-muted font-mono text-xs">{p.updated_at ? new Date(p.updated_at).toLocaleString() : 'N/A'}</td>
+                  <td className="px-6 py-4 text-dark-muted font-mono text-xs">{p.updated_at ? new Date(p.updated_at).toLocaleString() : t('not_available')}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border ${getStatusInfo(p.status).className}`}>
                       <span className={`h-1.5 w-1.5 rounded-full ${p.status === 1 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'}`}></span>

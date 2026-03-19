@@ -3,6 +3,7 @@ import { requisitionService, Requisition } from '../src/services/requisitionServ
 import { Search, Filter, Plus, Edit2, Eye, ChevronRight, FileCheck, Loader, Printer, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import DatePicker from '../components/DatePicker';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 type RequisitionFilters = {
   status: 'all' | '-1' | '0' | '1';
@@ -21,6 +22,7 @@ const defaultRequisitionFilters: RequisitionFilters = {
 };
 
 const Requisitions: React.FC = () => {
+  const { t } = useLanguage();
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ const Requisitions: React.FC = () => {
         setRequisitions(response.data);
       } catch (err: any) {
         console.error("Fetch error:", err);
-        setError(err.message || 'Failed to fetch requisitions');
+        setError(err.message || t('requisitions_error_fetch'));
       } finally {
         setLoading(false);
       }
@@ -55,12 +57,12 @@ const Requisitions: React.FC = () => {
   const getStatusInfo = (status: string | number) => {
     switch (parseStatus(status)) {
       case 1:
-        return { label: 'Approved', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+        return { label: t('status_approved'), className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
       case -1:
-        return { label: 'Rejected', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+        return { label: t('status_rejected'), className: 'bg-red-500/10 text-red-400 border-red-500/20' };
       case 0:
       default:
-        return { label: 'Pending', className: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' };
+        return { label: t('status_pending'), className: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' };
     }
   };
 
@@ -70,7 +72,7 @@ const Requisitions: React.FC = () => {
     requisitions.forEach((req) => {
       if (!req.owner?.id) return;
       if (!map.has(req.owner.id)) {
-        map.set(req.owner.id, req.owner.fullname || `User #${req.owner.id}`);
+        map.set(req.owner.id, req.owner.fullname || `${t('user')} #${req.owner.id}`);
       }
     });
 
@@ -167,11 +169,11 @@ const Requisitions: React.FC = () => {
           <div className="size-10 flex items-center justify-center bg-primary/20 rounded-lg text-primary ring-1 ring-primary/20">
             <FileCheck size={24} />
           </div>
-          <h2 className="text-white text-2xl font-bold leading-tight tracking-tight">Material Requisition Forms</h2>
+          <h2 className="text-white text-2xl font-bold leading-tight tracking-tight">{t('requisitions_title')}</h2>
         </div>
         <Link to="/requisitions/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-semibold">
           <Plus size={20} />
-          <span>New Requisition</span>
+          <span>{t('new_requisition')}</span>
         </Link>
       </header>
 
@@ -182,7 +184,7 @@ const Requisitions: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-slate-900 border border-dark-border text-white text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10 h-10 placeholder:text-dark-muted transition-all" 
-            placeholder="Search by Ref No, Subject, or Requester" 
+            placeholder={t('requisitions_search_placeholder')} 
           />
         </div>
         <button
@@ -191,7 +193,7 @@ const Requisitions: React.FC = () => {
           className="flex items-center gap-2 px-4 h-10 bg-slate-900 border border-dark-border rounded-lg text-sm text-dark-muted hover:text-white transition-colors"
         >
           <Filter size={18} />
-          <span>{activeFilterCount > 0 ? `Filters (${activeFilterCount})` : 'Filters'}</span>
+          <span>{activeFilterCount > 0 ? `${t('common_filters')} (${activeFilterCount})` : t('common_filters')}</span>
         </button>
         {(activeFilterCount > 0 || searchQuery.trim()) && (
           <button
@@ -203,7 +205,7 @@ const Requisitions: React.FC = () => {
             className="flex items-center gap-2 px-4 h-10 bg-slate-900 border border-dark-border rounded-lg text-sm text-dark-muted hover:text-white transition-colors"
           >
             <X size={16} />
-            <span>Reset</span>
+            <span>{t('common_reset')}</span>
           </button>
         )}
       </div>
@@ -213,26 +215,26 @@ const Requisitions: React.FC = () => {
           {loading ? (
             <div className="flex justify-center items-center h-64"><Loader className="animate-spin text-primary" size={40} /></div>
           ) : error ? (
-            <div className="text-red-500 p-6">Error: {error}</div>
+            <div className="text-red-500 p-6">{t('common_error')}: {error}</div>
           ) : (
           <table className="w-full text-left min-w-[900px]">
             <thead>
               <tr className="bg-slate-900/50 border-b border-dark-border">
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider w-32">Ref No</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider max-w-xs">Subject</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Date Created</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Requester</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Authorizer</th>
-                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">Items</th>
-                <th className="px-6 py-4 text-center text-dark-muted text-xs font-semibold uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-right text-dark-muted text-xs font-semibold uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider w-32">{t('requisitions_table_ref_no')}</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider max-w-xs">{t('requisitions_table_subject')}</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">{t('requisitions_table_date_created')}</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">{t('requisitions_table_requester')}</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">{t('requisitions_table_authorizer')}</th>
+                <th className="px-6 py-4 text-dark-muted text-xs font-semibold uppercase tracking-wider">{t('requisitions_table_items')}</th>
+                <th className="px-6 py-4 text-center text-dark-muted text-xs font-semibold uppercase tracking-wider">{t('common_status')}</th>
+                <th className="px-6 py-4 text-right text-dark-muted text-xs font-semibold uppercase tracking-wider">{t('common_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
               {filteredRequisitions.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-10 text-center text-dark-muted">
-                    No requisitions match your current search/filter.
+                    {t('requisitions_empty')}
                   </td>
                 </tr>
               ) : (
@@ -250,9 +252,11 @@ const Requisitions: React.FC = () => {
                       </div>
                     </td>
                     <td className={`px-6 py-4 text-dark-muted text-sm ${req.authorizer?.fullname ? '' : 'text-red-400 text-opacity-60'}`}>
-                      {req.authorizer?.fullname || '<Unassigned>'}
+                      {req.authorizer?.fullname || t('requisitions_unassigned')}
                       </td>
-                    <td className="px-6 py-4 text-dark-muted text-sm">{req.mr_form_materials?.length || 0} items</td>
+                    <td className="px-6 py-4 text-dark-muted text-sm">
+                      {req.mr_form_materials?.length || 0} {t('common_items')}
+                    </td>
                     <td className="px-6 py-4 text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${status.className}`}>
                         {status.label}
@@ -274,7 +278,11 @@ const Requisitions: React.FC = () => {
         </div>
         <div className="border-t border-dark-border px-6 py-4 flex items-center justify-between bg-dark-bg/30">
           <p className="text-sm text-dark-muted">
-            Showing <span className="text-white font-medium">{filteredRequisitions.length}</span> of <span className="text-white font-medium">{requisitions.length}</span> results
+            {t('common_showing')}{' '}
+            <span className="text-white font-medium">{filteredRequisitions.length}</span>{' '}
+            {t('common_of')}{' '}
+            <span className="text-white font-medium">{requisitions.length}</span>{' '}
+            {t('common_results')}
           </p>
           <div className="flex items-center gap-2">
             <button className="p-2 rounded border border-dark-border text-dark-muted hover:text-white disabled:opacity-50 transition-colors" disabled>
@@ -292,12 +300,12 @@ const Requisitions: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-2xl rounded-xl bg-dark-surface border border-dark-border shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-dark-border">
-              <h3 className="text-white text-lg font-semibold">Requisition Filters</h3>
+              <h3 className="text-white text-lg font-semibold">{t('requisitions_filters_title')}</h3>
               <button
                 type="button"
                 onClick={() => setIsFilterModalOpen(false)}
                 className="p-1.5 rounded-md text-dark-muted hover:text-white hover:bg-slate-800 transition-colors"
-                aria-label="Close filter modal"
+                aria-label={t('common_close')}
               >
                 <X size={18} />
               </button>
@@ -305,27 +313,27 @@ const Requisitions: React.FC = () => {
 
             <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm text-dark-muted">Status</label>
+                <label className="text-sm text-dark-muted">{t('common_status')}</label>
                 <select
                   value={draftFilters.status}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, status: e.target.value as RequisitionFilters['status'] }))}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none"
                 >
-                  <option value="all">All Status</option>
-                  <option value="0">Pending</option>
-                  <option value="1">Approved</option>
-                  <option value="-1">Rejected</option>
+                  <option value="all">{t('common_all_status')}</option>
+                  <option value="0">{t('status_pending')}</option>
+                  <option value="1">{t('status_approved')}</option>
+                  <option value="-1">{t('status_rejected')}</option>
                 </select>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-dark-muted">Requester</label>
+                <label className="text-sm text-dark-muted">{t('requisitions_filter_requester')}</label>
                 <select
                   value={draftFilters.requesterId}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, requesterId: e.target.value }))}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none"
                 >
-                  <option value="all">All Requesters</option>
+                  <option value="all">{t('requisitions_filter_all_requesters')}</option>
                   {requesterOptions.map((option) => (
                     <option key={option.id} value={String(option.id)}>
                       {option.name}
@@ -335,34 +343,34 @@ const Requisitions: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm text-dark-muted">Authorizer</label>
+                <label className="text-sm text-dark-muted">{t('requisitions_filter_authorizer')}</label>
                 <select
                   value={draftFilters.authorizerMode}
                   onChange={(e) => setDraftFilters((prev) => ({ ...prev, authorizerMode: e.target.value as RequisitionFilters['authorizerMode'] }))}
                   className="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2.5 text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none"
                 >
-                  <option value="all">All</option>
-                  <option value="assigned">Assigned</option>
-                  <option value="unassigned">Unassigned</option>
+                  <option value="all">{t('common_all')}</option>
+                  <option value="assigned">{t('common_assigned')}</option>
+                  <option value="unassigned">{t('common_unassigned')}</option>
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <label className="text-sm text-dark-muted">From Date</label>
+                  <label className="text-sm text-dark-muted">{t('common_from_date')}</label>
                   <DatePicker
                     value={draftFilters.dateFrom}
                     onChange={(nextValue) => setDraftFilters((prev) => ({ ...prev, dateFrom: nextValue }))}
-                    ariaLabel="Filter from date"
+                    ariaLabel={t('requisitions_filter_from_date')}
                     inputClassName="border-dark-border"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm text-dark-muted">To Date</label>
+                  <label className="text-sm text-dark-muted">{t('common_to_date')}</label>
                   <DatePicker
                     value={draftFilters.dateTo}
                     onChange={(nextValue) => setDraftFilters((prev) => ({ ...prev, dateTo: nextValue }))}
-                    ariaLabel="Filter to date"
+                    ariaLabel={t('requisitions_filter_to_date')}
                     inputClassName="border-dark-border"
                   />
                 </div>
@@ -375,7 +383,7 @@ const Requisitions: React.FC = () => {
                 onClick={() => setDraftFilters(defaultRequisitionFilters)}
                 className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-slate-800 transition-colors text-sm"
               >
-                Clear
+                {t('common_clear')}
               </button>
               <div className="flex items-center gap-3">
                 <button
@@ -383,14 +391,14 @@ const Requisitions: React.FC = () => {
                   onClick={() => setIsFilterModalOpen(false)}
                   className="px-4 py-2 rounded-lg border border-dark-border text-dark-muted hover:text-white hover:bg-slate-800 transition-colors text-sm"
                 >
-                  Cancel
+                  {t('common_cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={applyFilters}
                   className="px-4 py-2 rounded-lg bg-primary hover:bg-primary-dark text-white text-sm font-semibold transition-colors"
                 >
-                  Apply Filters
+                  {t('common_apply_filters')}
                 </button>
               </div>
             </div>

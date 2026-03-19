@@ -19,8 +19,10 @@ import {
   Smartphone
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const UserProfile: React.FC = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const [profile, setProfile] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,7 +61,7 @@ const UserProfile: React.FC = () => {
         setInitialValues({ displayName, position: currentPosition, workplaceId: currentWorkplaceId });
         dispatch(setUser(data as any));
       } catch (err: any) {
-        setError("Failed to load profile data.");
+        setError(t('profile_error_fetch'));
         console.error(err);
       }
       setLoading(false);
@@ -81,7 +83,7 @@ const UserProfile: React.FC = () => {
       } catch (err: any) {
         if (!mounted) return;
         setWorkplaces([]);
-        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+        setWorkplacesError(err.response?.data?.message || err.message || t('workplace_error_load'));
       } finally {
         if (mounted) setWorkplacesLoading(false);
       }
@@ -133,10 +135,10 @@ const UserProfile: React.FC = () => {
       setWorkplaceId(updatedWorkplaceId);
       setInitialValues({ displayName: updatedDisplayName, position: updatedPosition, workplaceId: updatedWorkplaceId });
       dispatch(setUser(response.data as any));
-      setSuccess("Profile updated successfully!");
+      setSuccess(t('profile_update_success'));
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(err.response?.data?.message || t('profile_error_update'));
     }
     setUpdating(false);
   };
@@ -149,10 +151,10 @@ const UserProfile: React.FC = () => {
 
   const getStatusInfo = (status: number | undefined) => {
     switch (status) {
-      case 1: return { text: 'Active', className: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20' };
-      case 0: return { text: 'Inactive', className: 'bg-slate-500/10 text-slate-400 ring-slate-500/20' };
-      case -1: return { text: 'Suspended', className: 'bg-red-500/10 text-red-400 ring-red-500/20' };
-      default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 ring-gray-500/20' };
+      case 1: return { text: t('status_active'), className: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20' };
+      case 0: return { text: t('status_inactive'), className: 'bg-slate-500/10 text-slate-400 ring-slate-500/20' };
+      case -1: return { text: t('status_suspended'), className: 'bg-red-500/10 text-red-400 ring-red-500/20' };
+      default: return { text: t('status_unknown'), className: 'bg-gray-500/10 text-gray-400 ring-gray-500/20' };
     }
   };
   
@@ -168,11 +170,11 @@ const UserProfile: React.FC = () => {
     <div className="max-w-[960px] mx-auto flex flex-col gap-8 animate-in fade-in duration-500 pb-20">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2 text-sm text-dark-muted">
-          <Link to="/" className="font-medium hover:text-primary cursor-pointer transition-colors">Home</Link>
+          <Link to="/" className="font-medium hover:text-primary cursor-pointer transition-colors">{t('home')}</Link>
           <ChevronRight size={14} />
-          <span className="text-white font-medium">My Profile</span>
+          <span className="text-white font-medium">{t('profile_my_profile')}</span>
         </div>
-        <h2 className="text-white text-3xl font-bold tracking-tight">User Profile</h2>
+        <h2 className="text-white text-3xl font-bold tracking-tight">{t('profile_title')}</h2>
       </div>
 
       <div className="bg-dark-surface border border-dark-border rounded-xl overflow-hidden shadow-xl">
@@ -201,7 +203,7 @@ const UserProfile: React.FC = () => {
             </div>
             <button className="flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-dark-border text-white rounded-lg text-sm font-medium transition-colors w-full md:w-auto">
               <Camera size={18} />
-              <span>Change Photo</span>
+              <span>{t('profile_change_photo')}</span>
             </button>
           </div>
         </div>
@@ -222,12 +224,12 @@ const UserProfile: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
             <div className="md:col-span-8 space-y-8">
               <section>
-                <h4 className="text-white text-lg font-medium border-b border-dark-border/50 pb-2 mb-6">Personal Information</h4>
+                <h4 className="text-white text-lg font-medium border-b border-dark-border/50 pb-2 mb-6">{t('profile_personal_info')}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Username */}
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Username</label>
+                    <label className="text-slate-300 text-sm font-medium">{t('label_username')}</label>
                     <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed"
                       readOnly value={username} onChange={e => setUsername(e.target.value)} />
                   </div>
@@ -237,14 +239,14 @@ const UserProfile: React.FC = () => {
 
                   {/* Display Name */}
                   <div className="space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Display name</label>
+                    <label className="text-slate-300 text-sm font-medium">{t('label_display_name')}</label>
                      <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
-                      value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. John Doe" />
+                      value={title} onChange={e => setTitle(e.target.value)} placeholder={t('placeholder_display_name_example')} />
                   </div>
 
                   {/* Full Name */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Full Name</label>
+                    <label className="text-slate-300 text-sm font-medium">{t('label_full_name')}</label>
                     <div className="relative">
                       <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                       <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed"
@@ -257,9 +259,9 @@ const UserProfile: React.FC = () => {
 
                   {/* Position */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Job Position</label>
+                    <label className="text-slate-300 text-sm font-medium">{t('label_position_title')}</label>
                     <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all"
-                      value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
+                      value={position} onChange={e => setPosition(e.target.value)} placeholder={t('placeholder_position_example')} />
                   </div>
                     {/* <input className="w-full bg-dark-bg border border-dark-border rounded-lg px-4 py-2.5 text-white focus:border-primary outline-none transition-all" 
                       readOnly value={position} onChange={e => setPosition(e.target.value)} placeholder="e.g. Warehouse Manager" />
@@ -267,7 +269,7 @@ const UserProfile: React.FC = () => {
 
                   {/* Workplace */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Workplace</label>
+                    <label className="text-slate-300 text-sm font-medium">{t('workplace')}</label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                       <select
@@ -275,7 +277,7 @@ const UserProfile: React.FC = () => {
                         onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
                         className="w-full bg-dark-bg border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-white focus:border-primary outline-none transition-all appearance-none cursor-pointer"
                       >
-                        <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                        <option value="">{workplacesLoading ? t('workplace_loading') : t('workplace_select_optional')}</option>
                         {workplaces.map((workplace) => (
                           <option key={workplace.id} value={workplace.id}>
                             {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
@@ -290,13 +292,13 @@ const UserProfile: React.FC = () => {
 
                   {/* Email (Read Only) */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-slate-300 text-sm font-medium">Email Address</label>
+                    <label className="text-slate-300 text-sm font-medium">{t('label_email_address')}</label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                       <input className="w-full bg-dark-surface/50 border border-dark-border rounded-lg pl-10 pr-4 py-2.5 text-dark-muted cursor-not-allowed" 
                         type="email" readOnly value={profile?.email || ''} />
                     </div>
-                    <p className="text-xs text-dark-muted">Contact admin to change email address.</p>
+                    <p className="text-xs text-dark-muted">{t('profile_contact_admin_email')}</p>
                   </div>
 
                 </div>
@@ -308,15 +310,15 @@ const UserProfile: React.FC = () => {
               <div className="bg-dark-bg/30 rounded-xl p-5 border border-dark-border">
                 <h5 className="text-white text-sm font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
                   <Shield size={16} className="text-primary" />
-                  Security
+                  {t('profile_security')}
                 </h5>
                 <button type="button" className="w-full flex items-center justify-between p-2 hover:bg-slate-800 rounded-lg text-sm text-slate-300 group transition-colors">
-                  <span className="flex items-center gap-2"><Key size={16} /> Change Password</span>
+                  <span className="flex items-center gap-2"><Key size={16} /> {t('profile_change_password')}</span>
                   <ChevronRight size={14} className="text-dark-muted group-hover:text-white" />
                 </button>
                 <div className="w-full flex items-center justify-between p-2 mt-2 rounded-lg text-sm text-slate-300">
-                  <span className="flex items-center gap-2"><Smartphone size={16} /> 2FA Status</span>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold border border-emerald-500/20">ENABLED</span>
+                  <span className="flex items-center gap-2"><Smartphone size={16} /> {t('profile_2fa_status')}</span>
+                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold border border-emerald-500/20">{t('profile_2fa_enabled')}</span>
                 </div>
               </div>
             </div>
@@ -324,10 +326,10 @@ const UserProfile: React.FC = () => {
 
           <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-6 border-t border-dark-border/30">
             <Link to="/" className="w-full sm:w-auto px-6 py-2.5 rounded-lg border border-dark-border text-white font-medium hover:bg-slate-800 transition-colors text-center">
-              Cancel
+              {t('common_cancel')}
             </Link>
-            <button type="submit" disabled={updating || !hasChanges} title={!hasChanges ? "No changes made" : "Save changes"} className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-              {updating ? <><Loader size={18} className="animate-spin" /><span>Saving...</span></> : <><Save size={18} /><span>Save Changes</span></>}
+            <button type="submit" disabled={updating || !hasChanges} title={!hasChanges ? t('common_no_changes') : t('common_save_changes')} className="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-dark text-white font-bold shadow-lg shadow-primary/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50">
+              {updating ? <><Loader size={18} className="animate-spin" /><span>{t('common_saving')}</span></> : <><Save size={18} /><span>{t('common_save_changes')}</span></>}
             </button>
           </div>
         </form>

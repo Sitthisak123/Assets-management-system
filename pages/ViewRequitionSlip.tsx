@@ -58,6 +58,7 @@ type SlipTranslation = {
   systemId: string;
   generatedFromSystem: string;
   materialRequisitionSlip: string;
+  materialExportSlip: string;
   printHint: string;
   na: string;
   statusApproved: string;
@@ -106,6 +107,7 @@ const slipTranslations: Record<Language, SlipTranslation> = {
     systemId: 'System ID',
     generatedFromSystem: 'Generated from internal management system',
     materialRequisitionSlip: 'Material requisition slip',
+    materialExportSlip: 'MATERIAL EXPORT SLIP',
     printHint: 'Standard A4 layout with multi-page material overflow support',
     na: 'N/A',
     statusApproved: 'APPROVED',
@@ -152,6 +154,7 @@ const slipTranslations: Record<Language, SlipTranslation> = {
     systemId: 'รหัสระบบ',
     generatedFromSystem: 'สร้างจากระบบจัดการภายใน',
     materialRequisitionSlip: 'ใบขอวัสดุ',
+    materialExportSlip: 'ใบส่งออกวัสดุ',
     printHint: 'รองรับกระดาษ A4 และการพิมพ์หลายหน้าสำหรับรายการที่ล้น',
     na: 'ไม่ระบุ',
     statusApproved: 'อนุมัติแล้ว',
@@ -476,7 +479,7 @@ const ViewRequitionSlip: React.FC = () => {
                     />
                   </svg>
                 </div>
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-primary wrap-overflow">MATERIAL EXPORT SLIP</h1>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-primary wrap-overflow">{text.materialExportSlip}</h1>
               </div>
               <p className="text-slate-500 text-sm font-medium tracking-wide wrap-overflow">{text.officialRecord}</p>
             </div>

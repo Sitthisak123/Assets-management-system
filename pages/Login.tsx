@@ -3,12 +3,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../src/services/authService';
 import { Grid, User, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 interface LoginProps {
   onLoginSuccess: () => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,10 +44,13 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
           </div>
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-white mb-6">
-              Seamless <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">Resource Control</span>
+              {t('login_hero_title')} <br />{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-300">
+                {t('login_hero_highlight')}
+              </span>
             </h1>
             <p className="text-dark-muted text-lg leading-relaxed font-light">
-              Efficiently manage personnel, track material requisitions, and streamline your internal operations from a single, secure portal.
+              {t('login_hero_subtitle')}
             </p>
           </div>
           <div className="mt-8 p-6 rounded-2xl bg-dark-surface/40 border border-slate-700/50 backdrop-blur-md shadow-2xl">
@@ -70,10 +75,10 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               <Grid className="text-white" size={24} />
             </div>
             <h2 className="text-3xl font-bold tracking-tight text-white">
-              Welcome back
+              {t('login_title')}
             </h2>
             <p className="text-dark-muted text-base font-normal">
-              Enter your credentials to access your account.
+              {t('login_subtitle')}
             </p>
           </div>
           
@@ -86,12 +91,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             )}
             <div className="flex flex-col gap-2">
               <label className="text-slate-300 text-sm font-medium leading-normal ml-1">
-                Email Address
+                {t('label_email_address')}
               </label>
               <div className="relative group">
                 <input 
                   className="flex w-full rounded-xl border-dark-border bg-dark-surface text-white focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-11 pr-4 text-base placeholder:text-slate-500 transition-all duration-200 hover:border-slate-600" 
-                  placeholder="e.g. user@company.com" 
+                  placeholder={t('login_email_placeholder')} 
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -105,12 +110,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             
             <div className="flex flex-col gap-2">
               <label className="text-slate-300 text-sm font-medium leading-normal ml-1">
-                Password
+                {t('label_password')}
               </label>
               <div className="relative group">
                 <input 
                   className="flex w-full rounded-xl border-dark-border bg-dark-surface text-white focus:border-primary focus:ring-1 focus:ring-primary h-12 pl-11 pr-11 text-base placeholder:text-slate-500 transition-all duration-200 hover:border-slate-600" 
-                  placeholder="Enter your password" 
+                  placeholder={t('login_password_placeholder')} 
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -131,7 +136,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
             
             <div className="flex flex-wrap items-center justify-end gap-y-2 px-1">
               <a className="text-primary text-sm font-medium hover:text-blue-400 transition-colors" href="#">
-                Forgot Password?
+                {t('login_forgot_password')}
               </a>
             </div>
             
@@ -140,13 +145,11 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               disabled={loading}
               className="mt-4 flex w-full items-center justify-center rounded-xl bg-primary hover:bg-primary-dark active:scale-[0.98] text-white h-12 text-base font-semibold leading-normal shadow-lg shadow-primary/20 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Logging in...' : 'Log In'}
+              {loading ? t('login_logging_in') : t('login_sign_in')}
             </button>
           </form> 
           <div className="mt-4 border-t border-slate-800 pt-6 text-center">
-            <p className="text-slate-600 text-xs">
-              © 2024 Internal Systems Corp. All rights reserved.
-            </p>
+            <p className="text-slate-600 text-xs">{t('login_footer')}</p>
           </div>
         </div>
       </div>
@@ -155,3 +158,4 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 };
 
 export default Login;
+

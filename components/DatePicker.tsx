@@ -1,5 +1,6 @@
 import React from 'react';
 import { CalendarDays, RotateCcw, X } from 'lucide-react';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 type DatePickerProps = {
   value: string;
@@ -23,13 +24,6 @@ const getTodayValue = () => {
   return today.toISOString().slice(0, 10);
 };
 
-const formatLabelDate = (value: string) => {
-  if (!value) return 'No date selected';
-  const parsed = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return 'Invalid date';
-  return parsed.toLocaleDateString();
-};
-
 const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
@@ -45,7 +39,14 @@ const DatePicker: React.FC<DatePickerProps> = ({
   clearable = true,
   ariaLabel,
 }) => {
+  const { t } = useLanguage();
   const baseInputClassName = 'w-full bg-dark-bg border border-slate-700 rounded-lg pl-10 pr-4 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none disabled:opacity-60 disabled:cursor-not-allowed';
+  const formatLabelDate = (dateValue: string) => {
+    if (!dateValue) return t('datepicker_no_date_selected');
+    const parsed = new Date(`${dateValue}T00:00:00`);
+    if (Number.isNaN(parsed.getTime())) return t('datepicker_invalid_date');
+    return parsed.toLocaleDateString();
+  };
 
   return (
     <div className={className}>
@@ -80,7 +81,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
               className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-dark-border text-dark-muted hover:text-white hover:border-primary/50 transition-colors disabled:opacity-50"
             >
               <RotateCcw size={12} />
-              <span>Today</span>
+              <span>{t('datepicker_today')}</span>
             </button>
             {clearable && !required && (
               <button
@@ -90,7 +91,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
                 className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md border border-dark-border text-dark-muted hover:text-white hover:border-primary/50 transition-colors disabled:opacity-50"
               >
                 <X size={12} />
-                <span>Clear</span>
+                <span>{t('common_clear')}</span>
               </button>
             )}
           </div>

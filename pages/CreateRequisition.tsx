@@ -10,6 +10,7 @@ import Breadcrumb from '../components/Breadcrumb';
 import DatePicker from '../components/DatePicker';
 import MaterialSearchSelect from '../components/MaterialSearchSelect';
 import UserSearchSelect from '../components/UserSearchSelect';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 type RequisitionItemRow = { material_id: number | null; quantity: number };
 
@@ -20,6 +21,7 @@ const getTodayDateValue = () => {
 };
 
 const CreateRequisition: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
@@ -72,7 +74,7 @@ const CreateRequisition: React.FC = () => {
     );
 
     if (materials.length > 0 && selectedMaterialIds.size >= materials.length) {
-      setSelectionError('All materials are already selected in this requisition.');
+      setSelectionError(t('requisitions_error_all_materials_selected'));
       return;
     }
 
@@ -94,7 +96,7 @@ const CreateRequisition: React.FC = () => {
       if (nextMaterialId !== null) {
         const duplicateIndex = newItems.findIndex((item, i) => i !== index && item.material_id === nextMaterialId);
         if (duplicateIndex !== -1) {
-          setSelectionError('Duplicate material is not allowed in this form.');
+          setSelectionError(t('requisitions_error_duplicate_material'));
           return;
         }
       }
@@ -107,7 +109,7 @@ const CreateRequisition: React.FC = () => {
 
       if (stockQty !== null && stockQty > 0 && nextQty > stockQty) {
         nextQty = stockQty;
-        setSelectionError(`Quantity cannot exceed stock (${stockQty}).`);
+        setSelectionError(`${t('requisitions_error_exceed_stock')} (${stockQty}).`);
       }
 
       newItems[index][field] = nextQty;
@@ -147,20 +149,20 @@ const CreateRequisition: React.FC = () => {
     setSelectionError(null);
 
     if (date && date > getTodayDateValue()) {
-      setError('Date Required cannot be in the future.');
+      setError(t('requisitions_error_date_future'));
       setLoading(false);
       return;
     }
 
     const user = authService.getCurrentUser();
     if (!user || !ownerId) {
-      setError("User must be logged in and an owner must be selected.");
+      setError(t('requisitions_error_owner_required'));
       setLoading(false);
       return;
     }
 
     if (items.length === 0) {
-      setSelectionError('At least one material item is required.');
+      setSelectionError(t('requisitions_error_item_required'));
       setLoading(false);
       return;
     }
@@ -170,13 +172,13 @@ const CreateRequisition: React.FC = () => {
       .filter((materialId): materialId is number => materialId !== null);
 
     if (new Set(selectedMaterialIds).size !== selectedMaterialIds.length) {
-      setSelectionError('Duplicate material is not allowed in this form.');
+      setSelectionError(t('requisitions_error_duplicate_material'));
       setLoading(false);
       return;
     }
 
     if (items.some(item => !item.material_id || item.quantity <= 0)) {
-      setError("All material items must be selected and have a quantity greater than 0.");
+      setError(t('requisitions_error_item_invalid'));
       setLoading(false);
       return;
     }
@@ -187,7 +189,7 @@ const CreateRequisition: React.FC = () => {
     });
 
     if (exceedsStock) {
-      setSelectionError('Quantity cannot exceed available stock.');
+      setSelectionError(t('requisitions_error_exceed_stock_available'));
       setLoading(false);
       return;
     }
@@ -209,7 +211,7 @@ const CreateRequisition: React.FC = () => {
       await requisitionService.createRequisition(requisitionData);
       navigate('/requisitions');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || t('requisitions_error_create'));
     }
     setLoading(false);
   };
@@ -218,7 +220,7 @@ const CreateRequisition: React.FC = () => {
     <div className="max-w-5xl mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <header className="flex flex-col gap-6">
         <Breadcrumb />
-        <h2 className="text-3xl font-bold text-white tracking-tight">Create Material Requisition</h2>
+        <h2 className="text-3xl font-bold text-white tracking-tight">{t('requisitions_create_title')}</h2>
       </header>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -230,52 +232,54 @@ const CreateRequisition: React.FC = () => {
         <div className="bg-dark-surface rounded-xl border border-dark-border shadow-sm overflow-hidden">
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Subject</label>
+              <label className="text-sm font-medium text-slate-300">{t('requisitions_label_subject')}</label>
               <input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 required
                 className="w-full bg-dark-bg border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                placeholder="e.g. Q3 Maintenance Materials"
+                placeholder={t('requisitions_placeholder_subject')}
               />
             </div>
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Description</label>
+              <label className="text-sm font-medium text-slate-300">{t('requisitions_label_description')}</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 className="w-full bg-dark-bg border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
                 rows={3}
-                placeholder="Provide details about the requisition (optional)"
+                placeholder={t('requisitions_placeholder_description')}
               />
             </div>
             <div className="md:col-span-2 space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Purpose</label>
+              <label className="text-sm font-medium text-slate-300">{t('requisitions_label_purpose')}</label>
               <textarea
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value)}
                 className="w-full bg-dark-bg border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
                 rows={3}
-                placeholder="Explain the purpose of this requisition (optional)"
+                placeholder={t('requisitions_placeholder_purpose')}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Date Required</label>
+              <label className="text-sm font-medium text-slate-300">{t('requisitions_label_date_required')}</label>
               <DatePicker
                 value={date}
                 onChange={setDate}
                 max={getTodayDateValue()}
                 required
-                ariaLabel="Date Required"
+                ariaLabel={t('requisitions_label_date_required')}
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-sm font-medium text-slate-300">Owner <span className="text-primary">*</span></label>
+              <label className="text-sm font-medium text-slate-300">
+                {t('requisitions_label_owner')} <span className="text-primary">*</span>
+              </label>
               <UserSearchSelect
                 users={personnel}
                 value={ownerId}
                 onSelect={setOwnerId}
-                placeholder="Search and select owner..."
+                placeholder={t('user_search_placeholder')}
               />
               {selectedOwner && (
                 <p className="text-[11px] text-dark-muted">
@@ -293,14 +297,14 @@ const CreateRequisition: React.FC = () => {
 
         <div className="bg-dark-surface rounded-xl border border-dark-border shadow-sm overflow-hidden">
           <h3 className="text-lg font-semibold text-white p-4 flex items-center gap-2">
-            <ShoppingCart size={20} /> Material Details
+            <ShoppingCart size={20} /> {t('requisitions_material_details')}
           </h3>
           <div className={`p-6 ${openMaterialSelectRow !== null ? 'overflow-hidden' : 'overflow-x-auto overflow-y-visible'}`}>
             <table className="w-full text-left min-w-[600px]">
               <thead>
                 <tr className="border-b border-dark-border">
-                  <th className="pb-3 text-xs font-semibold text-dark-muted uppercase tracking-wider w-[50%]">Item Name</th>
-                  <th className="pb-3 text-xs font-semibold text-dark-muted uppercase tracking-wider w-[20%]">Qty</th>
+                  <th className="pb-3 text-xs font-semibold text-dark-muted uppercase tracking-wider w-[50%]">{t('materials_item_name')}</th>
+                  <th className="pb-3 text-xs font-semibold text-dark-muted uppercase tracking-wider w-[20%]">{t('materials_qty')}</th>
                   <th className="pb-3 w-[10%]"></th>
                 </tr>
               </thead>
@@ -334,9 +338,9 @@ const CreateRequisition: React.FC = () => {
 
                         return (
                           <p className={`mt-2 text-[11px] ${availability.remainingQty < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
-                            Remain: {availability.remainingQty}
+                            {t('requisitions_remaining')}: {availability.remainingQty}
                             {availability.unitLabel ? ` ${availability.unitLabel}` : ''}
-                            <span className="text-dark-muted"> (Stock: {availability.stockQty})</span>
+                            <span className="text-dark-muted"> ({t('material_stock')}: {availability.stockQty})</span>
                           </p>
                         );
                       })()}
@@ -372,17 +376,24 @@ const CreateRequisition: React.FC = () => {
               className="w-full mt-4 py-3 rounded-lg border border-dashed border-slate-700 text-dark-muted hover:text-primary hover:border-primary/50 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-dark-muted disabled:hover:border-slate-700"
             >
               <PlusCircle size={18} />
-              <span className="text-sm font-medium">{allMaterialsSelected ? 'All Materials Added' : 'Add New Item'}</span>
+              <span className="text-sm font-medium">{allMaterialsSelected ? t('requisitions_all_materials_added') : t('requisitions_add_item')}</span>
             </button>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-4">
           <button type="button" onClick={() => navigate('/requisitions')} className="px-6 py-3 text-sm font-medium text-dark-muted hover:text-white transition-colors">
-            Cancel
+            {t('common_cancel')}
           </button>
           <button type="submit" disabled={loading} className="px-8 py-3 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg shadow-lg flex items-center gap-2 transition-all disabled:opacity-50">
-            {loading ? <><Loader size={18} className="animate-spin" /><span>Submitting...</span></> : <><span>Submit Requisition</span></> }
+            {loading ? (
+              <>
+                <Loader size={18} className="animate-spin" />
+                <span>{t('requisitions_submitting')}</span>
+              </>
+            ) : (
+              <span>{t('requisitions_submit')}</span>
+            )}
           </button>
         </div>
       </form>

@@ -2,9 +2,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bug, AlertCircle, Terminal } from 'lucide-react';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const NotFound: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
     <div className="flex flex-1 items-center justify-center p-4 md:p-8 relative overflow-hidden animate-in fade-in duration-700">
@@ -24,20 +26,20 @@ const NotFound: React.FC = () => {
           <div className="flex flex-col gap-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-dark-surface border border-dark-border shadow-sm w-fit mx-auto md:mx-0">
               <AlertCircle size={18} className="text-primary" />
-              <span className="text-slate-300 text-xs font-bold tracking-widest uppercase">Page Error</span>
+              <span className="text-slate-300 text-xs font-bold tracking-widest uppercase">{t('not_found_page_error')}</span>
             </div>
             <h1 className="text-white text-5xl md:text-6xl font-extrabold leading-none tracking-tight">
-              404 Not Found
+              {t('not_found_title')}
             </h1>
             <p className="text-dark-muted text-lg md:xl font-medium leading-relaxed">
-              The resource you requested is unavailable.
+              {t('not_found_subtitle')}
             </p>
           </div>
           
           <div className="h-px w-full bg-dark-border"></div>
           
           <p className="text-slate-500 text-base font-normal leading-relaxed">
-            We couldn't locate the personnel record or material requisition you're looking for. It may have been moved, deleted, or the ID is incorrect.
+            {t('not_found_description')}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full pt-2">
@@ -46,17 +48,17 @@ const NotFound: React.FC = () => {
               className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg h-12 px-8 bg-primary hover:bg-primary-dark text-white text-sm font-bold tracking-wide transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)]"
             >
               <ArrowLeft size={20} />
-              <span>Return to Dashboard</span>
+              <span>{t('not_found_back_dashboard')}</span>
             </button>
             <button className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg h-12 px-8 bg-dark-surface hover:bg-slate-700 border border-dark-border text-slate-200 text-sm font-bold tracking-wide transition-all">
               <Bug size={20} />
-              <span>Report Issue</span>
+              <span>{t('not_found_report_issue')}</span>
             </button>
           </div>
 
           <div className="mt-4 pt-6 w-full flex items-center gap-3 text-xs font-mono text-slate-600 border-t border-dark-border/50">
             <Terminal size={16} />
-            <span>Reference: SYSTEM_ERR_MISSING_#8X92</span>
+            <span>{t('not_found_reference')} SYSTEM_ERR_MISSING_#8X92</span>
           </div>
         </div>
       </div>

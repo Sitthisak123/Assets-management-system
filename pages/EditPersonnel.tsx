@@ -14,8 +14,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { personnelService } from '../src/services/personnelService';
 import { workplaceService, Workplace } from '../src/services/workplaceService';
 import Breadcrumb from '../components/Breadcrumb';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const EditPersonnel: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -54,7 +56,7 @@ const EditPersonnel: React.FC = () => {
   useEffect(() => {
     const fetchPersonnel = async () => {
       if (!id) {
-        setError("No personnel ID provided.");
+        setError(t('personnel_error_missing_id'));
         setLoading(false);
         return;
       }
@@ -77,7 +79,7 @@ const EditPersonnel: React.FC = () => {
           setOriginalRole(data.role);
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch personnel data.');
+        setError(err.message || t('personnel_error_fetch'));
       }
       setLoading(false);
     };
@@ -98,7 +100,7 @@ const EditPersonnel: React.FC = () => {
       } catch (err: any) {
         if (!mounted) return;
         setWorkplaces([]);
-        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+        setWorkplacesError(err.response?.data?.message || err.message || t('workplace_error_load'));
       } finally {
         if (mounted) setWorkplacesLoading(false);
       }
@@ -127,7 +129,7 @@ const EditPersonnel: React.FC = () => {
       await personnelService.deletePersonnel(id);
       navigate('/personnel');
     } catch (err: any) {
-      setError(err.message || 'Failed to delete personnel.');
+      setError(err.message || t('personnel_error_delete'));
       setIsDeleting(false);
       toggleDeleteModal();
     }
@@ -156,7 +158,7 @@ const EditPersonnel: React.FC = () => {
       setOriginalRole(role);
       navigate('/personnel');
     } catch (err: any) {
-      setError(err.message || 'Failed to update personnel.');
+      setError(err.message || t('personnel_error_update'));
     }
     setIsSubmitting(false);
   };
@@ -175,13 +177,13 @@ const EditPersonnel: React.FC = () => {
       <div className="max-w-5xl mx-auto flex flex-col gap-8">
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-4 flex flex-col items-center gap-3">
           <AlertCircle size={40} />
-          <h3 className="text-xl font-bold">Error</h3>
+          <h3 className="text-xl font-bold">{t('common_error')}</h3>
           <span>{error}</span>
           <button 
             onClick={() => navigate('/personnel')}
             className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg"
           >
-            Back to Personnel
+            {t('personnel_back')}
           </button>
         </div>
       </div>
@@ -193,8 +195,8 @@ const EditPersonnel: React.FC = () => {
       <div className="flex flex-col gap-6">
         <Breadcrumb />
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Edit Personnel</h1>
-          <p className="text-dark-muted text-base max-w-3xl">Update the employee's information in the organization directory. Changes are indicated and can be saved.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{t('personnel_edit_title')}</h1>
+          <p className="text-dark-muted text-base max-w-3xl">{t('personnel_edit_subtitle')}</p>
         </div>
       </div>
 
@@ -215,11 +217,15 @@ const EditPersonnel: React.FC = () => {
               </div>
             </div>
             <div className="text-center sm:text-left pt-1">
-              <h3 className="text-lg font-semibold text-white">Profile Photo</h3>
-              <p className="text-sm text-dark-muted mt-1 max-w-sm">Update the professional headshot. This will be used for ID badges and the internal directory.</p>
+              <h3 className="text-lg font-semibold text-white">{t('profile_photo_title')}</h3>
+              <p className="text-sm text-dark-muted mt-1 max-w-sm">{t('profile_photo_subtitle_personnel_update')}</p>
               <div className="flex gap-4 mt-4 justify-center sm:justify-start">
-                <button type="button" className="text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 border border-dark-border px-4 py-2 rounded-lg transition-colors">Choose File</button>
-                <button type="button" className="text-sm font-medium text-red-400 hover:text-red-300 px-2 py-2 transition-colors">Remove</button>
+                <button type="button" className="text-sm font-medium text-white bg-slate-800 hover:bg-slate-700 border border-dark-border px-4 py-2 rounded-lg transition-colors">
+                  {t('common_choose_file')}
+                </button>
+                <button type="button" className="text-sm font-medium text-red-400 hover:text-red-300 px-2 py-2 transition-colors">
+                  {t('common_remove')}
+                </button>
               </div>
             </div>
           </div>
@@ -238,21 +244,23 @@ const EditPersonnel: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <User size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+              <h3 className="text-lg font-semibold text-white">{t('section_personal_information')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Full Name <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_full_name')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={fullname}
                   onChange={(e) => setFullname(e.target.value)}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="e.g. Sarah Connor" 
+                  placeholder={t('placeholder_fullname_example')} 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Email Address</label>
+                <label className="text-sm font-medium text-gray-300">{t('label_email_address')}</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <input
@@ -260,12 +268,12 @@ const EditPersonnel: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
                     type="email" 
-                    placeholder="sarah@company.com" 
+                    placeholder={t('placeholder_email_example')} 
                   />
                 </div>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-300">Workplace</label>
+                <label className="text-sm font-medium text-gray-300">{t('workplace')}</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <select
@@ -273,7 +281,7 @@ const EditPersonnel: React.FC = () => {
                     onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
                   >
-                    <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                    <option value="">{workplacesLoading ? t('workplace_loading') : t('workplace_select_optional')}</option>
                     {workplaces.map((workplace) => (
                       <option key={workplace.id} value={workplace.id}>
                         {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
@@ -293,21 +301,25 @@ const EditPersonnel: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <BadgeCheck size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Role & Responsibilities</h3>
+              <h3 className="text-lg font-semibold text-white">{t('section_role_responsibilities')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_position_title')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="e.g. Senior Frontend Engineer" 
+                  placeholder={t('placeholder_position_example')} 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Role <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_role')} <span className="text-primary">*</span>
+                </label>
                 <select 
                   value={role}
                   onChange={(e) => setRole(parseInt(e.target.value))}
@@ -315,7 +327,7 @@ const EditPersonnel: React.FC = () => {
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-not-allowed appearance-none"
                 >
-                  <option value={-1}>Personnel Role</option>
+                  <option value={-1}>{t('role_personnel')}</option>
                 </select>
               </div>
             </div>
@@ -329,7 +341,7 @@ const EditPersonnel: React.FC = () => {
               onClick={toggleDeleteModal}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 transition-all rounded-lg"
             >
-              Delete Personnel
+              {t('personnel_delete_button')}
             </button>
           </div>
           <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 w-full sm:w-auto">
@@ -338,15 +350,15 @@ const EditPersonnel: React.FC = () => {
               onClick={() => navigate('/personnel')}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
             >
-              Cancel
+              {t('common_cancel')}
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting || !hasChanges}
-              title={!hasChanges ? "No changes made" : "Save changes"}
+              title={!hasChanges ? t('common_no_changes') : t('common_save_changes')}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : <><Save size={18} /><span>Save Changes</span></>}
+              {isSubmitting ? t('common_saving') : <><Save size={18} /><span>{t('common_save_changes')}</span></>}
             </button>
           </div>
         </div>
@@ -359,9 +371,9 @@ const EditPersonnel: React.FC = () => {
               <div className="p-3 bg-red-500/10 rounded-full border-4 border-red-500/20 mb-4">
                 <Archive size={32} className="text-red-500" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Confirm Deletion</h2>
+              <h2 className="text-2xl font-bold text-white">{t('personnel_delete_confirm_title')}</h2>
               <p className="text-dark-muted mt-2">
-                Are you sure you want to delete this personnel record? This action cannot be undone.
+                {t('personnel_delete_confirm_body')}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-8">
@@ -370,14 +382,14 @@ const EditPersonnel: React.FC = () => {
                 disabled={isDeleting}
                 className="px-6 py-3 text-sm font-medium text-dark-muted hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-all"
               >
-                Cancel
+                {t('common_cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={isDeleting}
                 className="px-6 py-3 text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                {isDeleting ? t('common_deleting') : t('common_confirm_delete')}
               </button>
             </div>
           </div>

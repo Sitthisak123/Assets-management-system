@@ -14,8 +14,10 @@ import {
 import { Link } from 'react-router-dom';
 
 import Breadcrumb from '../components/Breadcrumb';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const Personnel: React.FC = () => {
+  const { t } = useLanguage();
   // Note: Ensure your PersonnelType interface in personnelService is updated 
   // to match the new flat Users structure (id, fullname, position, email, title, role, status).
   const [personnel, setPersonnel] = useState<PersonnelType[]>([]);
@@ -29,7 +31,7 @@ const Personnel: React.FC = () => {
         const response = await personnelService.getPersonnel();
         setPersonnel(response.data);
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch personnel');
+        setError(err.message || t('personnel_error_fetch'));
       }
       setLoading(false);
     };
@@ -39,10 +41,10 @@ const Personnel: React.FC = () => {
 
   const getStatusInfo = (status: number | undefined) => {
     switch (status) {
-      case 1: return { text: 'Active', className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
-      case 0: return { text: 'Inactive', className: 'bg-slate-500/10 text-slate-400 border-slate-500/20' };
-      case -1: return { text: 'Suspended', className: 'bg-red-500/10 text-red-400 border-red-500/20' };
-      default: return { text: 'Unknown', className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
+      case 1: return { text: t('status_active'), className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
+      case 0: return { text: t('status_inactive'), className: 'bg-slate-500/10 text-slate-400 border-slate-500/20' };
+      case -1: return { text: t('status_suspended'), className: 'bg-red-500/10 text-red-400 border-red-500/20' };
+      default: return { text: t('status_unknown'), className: 'bg-gray-500/10 text-gray-400 border-gray-500/20' };
     }
   };
 
@@ -51,9 +53,9 @@ const Personnel: React.FC = () => {
       return [employee.workplace.building, employee.workplace.room].filter(Boolean).join(' / ');
     }
     if (employee.workplace_id) {
-      return `Workplace #${employee.workplace_id}`;
+      return `${t('workplace')} #${employee.workplace_id}`;
     }
-    return 'N/A';
+    return t('not_available');
   };
   
 
@@ -69,13 +71,13 @@ const Personnel: React.FC = () => {
         <Breadcrumb />
         <Link to="/personnel/create" className="flex items-center justify-center gap-2 bg-primary hover:bg-blue-600 text-white px-5 py-2.5 rounded-lg shadow-lg shadow-primary/20 transition-all font-medium whitespace-nowrap">
           <Plus size={20} />
-          <span>Personnel</span>
+          <span>{t('personnel_add_button')}</span>
         </Link>
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-bold text-white tracking-tight">Personnel Directory</h2>
-        <p className="text-dark-muted text-sm max-w-2xl">Manage your organization's talent pool, track roles, and handle access requests efficiently.</p>
+        <h2 className="text-3xl font-bold text-white tracking-tight">{t('personnel_directory_title')}</h2>
+        <p className="text-dark-muted text-sm max-w-2xl">{t('personnel_directory_subtitle')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -84,7 +86,7 @@ const Personnel: React.FC = () => {
               <Users className="text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-muted">Total</p>
+              <p className="text-sm text-dark-muted">{t('personnel_stat_total')}</p>
               <p className="text-2xl font-bold text-white">{loading ? '...' : totalEmployees}</p>
             </div>
           </div>
@@ -93,7 +95,7 @@ const Personnel: React.FC = () => {
               <Users className="text-emerald-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-muted">Active Now</p>
+              <p className="text-sm text-dark-muted">{t('personnel_stat_active_now')}</p>
               <p className="text-2xl font-bold text-white">{loading ? '...' : activeEmployees}</p>
             </div>
           </div>
@@ -102,7 +104,7 @@ const Personnel: React.FC = () => {
               <Users className="text-amber-600" />
             </div>
             <div>
-              <p className="text-sm text-dark-muted">On Leave / Inactive</p>
+              <p className="text-sm text-dark-muted">{t('personnel_stat_on_leave')}</p>
               <p className="text-2xl font-bold text-white">{loading ? '...' : onLeaveEmployees}</p>
             </div>
           </div>
@@ -113,12 +115,12 @@ const Personnel: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted group-focus-within:text-primary transition-colors" size={20} />
           <input 
             className="w-full bg-slate-900/50 border border-dark-border text-white text-sm rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary pl-10 py-2.5 placeholder:text-dark-muted transition-all" 
-            placeholder="Search by name, role, or ID..." 
+            placeholder={t('personnel_search_placeholder')} 
           />
         </div>
         <div className="flex items-center gap-3 w-full md:w-auto">
           <button className="flex items-center gap-2 px-3 py-2 bg-slate-800 border border-dark-border rounded-lg hover:border-primary/50 transition-all text-sm font-medium text-slate-300">
-            <span>Department</span>
+            <span>{t('personnel_department')}</span>
             <ChevronRight size={14} className="rotate-90" />
           </button>
           <div className="flex bg-slate-800/50 p-1 rounded-lg border border-dark-border">
@@ -136,19 +138,19 @@ const Personnel: React.FC = () => {
             </div>
           ) : error ? (
             <div className="flex justify-center items-center h-64 text-red-500">
-              Error: {error}
+              {t('common_error')}: {error}
             </div>
           ) : (
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-900/40 border-b border-dark-border">
                 <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider w-16">#</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Employee</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Contact</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Position</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Workplace</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">Status</th>
-                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">Actions</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('personnel_table_employee')}</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('personnel_table_contact')}</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('personnel_table_position')}</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('workplace')}</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider">{t('common_status')}</th>
+                <th className="py-4 px-6 text-xs font-semibold text-dark-muted uppercase tracking-wider text-right">{t('common_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-dark-border">
@@ -162,13 +164,13 @@ const Personnel: React.FC = () => {
                       <img src={`https://picsum.photos/seed/${emp.id}/100/100`} className="h-10 w-10 rounded-full object-cover border-2 border-white/10" alt={emp.fullname} />
                       <div>
                         <div className="font-medium text-white">{emp.fullname}</div>
-                        <div className="text-xs text-dark-muted">{emp.display_name || 'N/A'}</div>
+                        <div className="text-xs text-dark-muted">{emp.display_name || t('not_available')}</div>
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex flex-col text-sm">
-                      <span className="text-slate-300">{emp.email || 'N/A'}</span>
+                      <span className="text-slate-300">{emp.email || t('not_available')}</span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
@@ -194,10 +196,22 @@ const Personnel: React.FC = () => {
           )}
         </div>
         <div className="bg-dark-surface px-6 py-4 border-t border-dark-border flex items-center justify-between">
-          <p className="text-sm text-dark-muted">Showing <span className="font-medium text-white">1</span> to <span className="font-medium text-white">{personnel.length}</span> of <span className="font-medium text-white">{personnel.length}</span> results</p>
+          <p className="text-sm text-dark-muted">
+            {t('common_showing')}{' '}
+            <span className="font-medium text-white">1</span>{' '}
+            {t('common_to')}{' '}
+            <span className="font-medium text-white">{personnel.length}</span>{' '}
+            {t('common_of')}{' '}
+            <span className="font-medium text-white">{personnel.length}</span>{' '}
+            {t('common_results')}
+          </p>
           <div className="flex items-center gap-2">
-            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 disabled:opacity-50 transition-colors" disabled>Previous</button>
-            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 transition-colors">Next</button>
+            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 disabled:opacity-50 transition-colors" disabled>
+              {t('common_previous')}
+            </button>
+            <button className="px-4 py-2 rounded-lg border border-dark-border text-sm font-medium text-dark-muted hover:bg-slate-800 transition-colors">
+              {t('common_next')}
+            </button>
           </div>
         </div>
       </div>

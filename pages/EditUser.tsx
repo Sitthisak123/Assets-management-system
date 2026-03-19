@@ -16,8 +16,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { userService } from '../src/services/userService';
 import { workplaceService, Workplace } from '../src/services/workplaceService';
 import Breadcrumb from '../components/Breadcrumb';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 const EditUser: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
@@ -68,7 +70,7 @@ const EditUser: React.FC = () => {
   useEffect(() => {
     const fetchUser = async () => {
       if (!id) {
-        setError("No user ID provided.");
+        setError(t('users_error_missing_id'));
         setLoading(false);
         return;
       }
@@ -98,7 +100,7 @@ const EditUser: React.FC = () => {
 
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to fetch user data.');
+        setError(err.message || t('users_error_fetch'));
       }
       setLoading(false);
     };
@@ -119,7 +121,7 @@ const EditUser: React.FC = () => {
       } catch (err: any) {
         if (!mounted) return;
         setWorkplaces([]);
-        setWorkplacesError(err.response?.data?.message || err.message || 'Failed to load workplaces');
+        setWorkplacesError(err.response?.data?.message || err.message || t('workplace_error_load'));
       } finally {
         if (mounted) setWorkplacesLoading(false);
       }
@@ -148,7 +150,7 @@ const EditUser: React.FC = () => {
       await userService.updateUser(id, { status: -1 });
       navigate('/users');
     } catch (err: any) {
-      setError(err.message || 'Failed to suspend user.');
+      setError(err.message || t('users_error_suspend'));
       setIsSuspending(false);
       toggleSuspendModal();
     }
@@ -180,7 +182,7 @@ const EditUser: React.FC = () => {
       await userService.updateUser(id, userData);
       navigate('/users');
     } catch (err: any) {
-      setError(err.message || 'Failed to update user.');
+      setError(err.message || t('users_error_update'));
     }
     setIsSubmitting(false);
   };
@@ -199,13 +201,13 @@ const EditUser: React.FC = () => {
       <div className="max-w-5xl mx-auto flex flex-col gap-8">
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg p-4 flex flex-col items-center gap-3">
           <AlertCircle size={40} />
-          <h3 className="text-xl font-bold">Error</h3>
+          <h3 className="text-xl font-bold">{t('common_error')}</h3>
           <span>{error}</span>
           <button 
             onClick={() => navigate('/users')}
             className="mt-4 px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary-dark rounded-lg"
           >
-            Back to Users
+            {t('users_back')}
           </button>
         </div>
       </div>
@@ -217,8 +219,8 @@ const EditUser: React.FC = () => {
       <div className="flex flex-col gap-6">
         <Breadcrumb />
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">Edit User</h1>
-          <p className="text-dark-muted text-base max-w-3xl">Update the user's information and credentials.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{t('users_edit_title')}</h1>
+          <p className="text-dark-muted text-base max-w-3xl">{t('users_edit_subtitle')}</p>
         </div>
       </div>
 
@@ -236,30 +238,32 @@ const EditUser: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <User size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+              <h3 className="text-lg font-semibold text-white">{t('section_personal_information')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Full Name <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_full_name')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={fullname}
                   onChange={(e) => setFullname(e.target.value)}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="e.g. Sarah Connor" 
+                  placeholder={t('placeholder_fullname_example')} 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Display Name</label>
+                <label className="text-sm font-medium text-gray-300">{t('label_display_name')}</label>
                 <input 
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="e.g. Sarah" 
+                  placeholder={t('placeholder_display_name_example')} 
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-300">Email Address</label>
+                <label className="text-sm font-medium text-gray-300">{t('label_email_address')}</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <input
@@ -267,12 +271,12 @@ const EditUser: React.FC = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
                     type="email" 
-                    placeholder="sarah@company.com" 
+                    placeholder={t('placeholder_email_example')} 
                   />
                 </div>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-300">Workplace</label>
+                <label className="text-sm font-medium text-gray-300">{t('workplace')}</label>
                 <div className="relative">
                   <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 text-dark-muted" size={18} />
                   <select
@@ -280,7 +284,7 @@ const EditUser: React.FC = () => {
                     onChange={(e) => setWorkplaceId(e.target.value ? parseInt(e.target.value, 10) : '')}
                     className="w-full bg-slate-900 border border-dark-border rounded-lg pl-11 pr-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary appearance-none cursor-pointer"
                   >
-                    <option value="">{workplacesLoading ? 'Loading workplaces...' : 'Select workplace (optional)'}</option>
+                    <option value="">{workplacesLoading ? t('workplace_loading') : t('workplace_select_optional')}</option>
                     {workplaces.map((workplace) => (
                       <option key={workplace.id} value={workplace.id}>
                         {[workplace.building, workplace.room].filter(Boolean).join(' / ')}
@@ -300,43 +304,49 @@ const EditUser: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <BadgeCheck size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Role & Responsibilities</h3>
+              <h3 className="text-lg font-semibold text-white">{t('section_role_responsibilities')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Position Title <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_position_title')} <span className="text-primary">*</span>
+                </label>
                 <input 
                   value={position}
                   onChange={(e) => setPosition(e.target.value)}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="e.g. Senior Frontend Engineer" 
+                  placeholder={t('placeholder_position_example')} 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Role <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('label_role')} <span className="text-primary">*</span>
+                </label>
                 <select 
                   value={role}
                   onChange={(e) => setRole(parseInt(e.target.value))}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
                 >
-                  <option value={1}>Superadmin</option>
-                  <option value={0}>Admin/User</option>
-                  <option value={-1}>Personnel</option>
+                  <option value={1}>{t('users_role_superadmin')}</option>
+                  <option value={0}>{t('users_role_admin_user')}</option>
+                  <option value={-1}>{t('role_personnel')}</option>
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Status <span className="text-primary">*</span></label>
+                <label className="text-sm font-medium text-gray-300">
+                  {t('common_status')} <span className="text-primary">*</span>
+                </label>
                 <select 
                   value={status}
                   onChange={(e) => setStatus(parseInt(e.target.value))}
                   required
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
                 >
-                  <option value={1}>Active</option>
-                  <option value={0}>Inactive</option>
-                  <option value={-1}>Suspended</option>
+                  <option value={1}>{t('status_active')}</option>
+                  <option value={0}>{t('status_inactive')}</option>
+                  <option value={-1}>{t('status_suspended')}</option>
                 </select>
               </div>
             </div>
@@ -347,26 +357,26 @@ const EditUser: React.FC = () => {
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary">
                 <KeyRound size={18} />
               </div>
-              <h3 className="text-lg font-semibold text-white">Credentials</h3>
+              <h3 className="text-lg font-semibold text-white">{t('users_credentials')}</h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Username</label>
+                <label className="text-sm font-medium text-gray-300">{t('label_username')}</label>
                 <input 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="e.g. sarah"
+                  placeholder={t('placeholder_username_example')}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Password</label>
+                <label className="text-sm font-medium text-gray-300">{t('label_password')}</label>
                 <input 
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-slate-900 border border-dark-border rounded-lg px-4 py-2.5 text-white placeholder-slate-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all" 
-                  placeholder="Leave blank to keep unchanged"
+                  placeholder={t('users_password_placeholder')}
                 />
               </div>
             </div>
@@ -380,7 +390,7 @@ const EditUser: React.FC = () => {
               onClick={toggleSuspendModal}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-red-500 hover:text-red-400 transition-all rounded-lg"
             >
-              Suspend/On leave
+              {t('users_suspend_button')}
             </button>
           </div>
           <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 w-full sm:w-auto">
@@ -389,15 +399,15 @@ const EditUser: React.FC = () => {
               onClick={() => navigate('/users')}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-dark-muted hover:text-white transition-all rounded-lg"
             >
-              Cancel
+              {t('common_cancel')}
             </button>
             <button 
               type="submit" 
               disabled={isSubmitting || !hasChanges}
-              title={!hasChanges ? "No changes made" : "Save changes"}
+              title={!hasChanges ? t('common_no_changes') : t('common_save_changes')}
               className="w-full sm:w-auto px-6 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary-dark shadow-lg shadow-primary/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : <><Save size={18} /><span>Save Changes</span></>}
+              {isSubmitting ? t('common_saving') : <><Save size={18} /><span>{t('common_save_changes')}</span></>}
             </button>
           </div>
         </div>
@@ -410,9 +420,9 @@ const EditUser: React.FC = () => {
               <div className="p-3 bg-red-500/10 rounded-full border-4 border-red-500/20 mb-4">
                 <Archive size={32} className="text-red-500" />
               </div>
-              <h2 className="text-2xl font-bold text-white">Confirm Suspension</h2>
+              <h2 className="text-2xl font-bold text-white">{t('users_suspend_confirm_title')}</h2>
               <p className="text-dark-muted mt-2">
-                Are you sure you want to suspend this user? They will not be able to log in.
+                {t('users_suspend_confirm_body')}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 mt-8">
@@ -421,14 +431,14 @@ const EditUser: React.FC = () => {
                 disabled={isSuspending}
                 className="px-6 py-3 text-sm font-medium text-dark-muted hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-all"
               >
-                Cancel
+                {t('common_cancel')}
               </button>
               <button
                 onClick={handleSuspend}
                 disabled={isSuspending}
                 className="px-6 py-3 text-sm font-medium text-white bg-red-600 hover:bg-red-700 shadow-lg shadow-red-500/20 rounded-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {isSuspending ? 'Suspending...' : 'Confirm Suspend'}
+                {isSuspending ? t('users_suspending') : t('users_confirm_suspend')}
               </button>
             </div>
           </div>

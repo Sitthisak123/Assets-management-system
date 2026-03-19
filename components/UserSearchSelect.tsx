@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, Search, X } from 'lucide-react';
+import { useLanguage } from '../src/contexts/LanguageContext';
 
 type WorkplaceOption = {
   building?: string | null;
@@ -32,26 +33,14 @@ const getWorkplaceLabel = (user: UserOption) => {
   return [building, room].filter(Boolean).join(' / ');
 };
 
-const getPrimaryLabel = (user: UserOption) => {
-  const fullname = user.fullname?.trim();
-  const displayName = user.display_name?.trim();
-  return fullname || displayName || `User #${user.id}`;
-};
-
-const getStatusLabel = (status?: number) => {
-  if (status === 1) return 'Active';
-  if (status === 0) return 'Inactive';
-  if (status === -1) return 'Suspended';
-  return '';
-};
-
 const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
   users,
   value,
   onSelect,
-  placeholder = 'Search and select owner...',
+  placeholder,
   onOpenChange,
 }) => {
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputWrapRef = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -64,6 +53,19 @@ const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
     width: 0,
   });
 
+  const getPrimaryLabel = (user: UserOption) => {
+    const fullname = user.fullname?.trim();
+    const displayName = user.display_name?.trim();
+    return fullname || displayName || `${t('user')} #${user.id}`;
+  };
+
+  const getStatusLabel = (status?: number) => {
+    if (status === 1) return t('status_active');
+    if (status === 0) return t('status_inactive');
+    if (status === -1) return t('status_suspended');
+    return '';
+  };
+
   const selectedUser = useMemo(() => {
     return users.find((user) => user.id === value) || null;
   }, [users, value]);
@@ -72,7 +74,7 @@ const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
     if (!isOpen) {
       setQuery(selectedUser ? getPrimaryLabel(selectedUser) : '');
     }
-  }, [isOpen, selectedUser]);
+  }, [isOpen, selectedUser, t]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -174,7 +176,9 @@ const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
       .sort((a, b) => a.score - b.score || getPrimaryLabel(a.user).localeCompare(getPrimaryLabel(b.user)));
 
     return ranked.map((item) => item.user);
-  }, [users, query]);
+  }, [users, query, t]);
+
+  const resolvedPlaceholder = placeholder ?? t('user_search_placeholder');
 
   return (
     <div className="relative z-40" ref={containerRef}>
@@ -190,7 +194,7 @@ const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
           onKeyDown={(e) => {
             if (e.key === 'Escape') setIsOpen(false);
           }}
-          placeholder={placeholder}
+          placeholder={resolvedPlaceholder}
           className="w-full bg-dark-bg border border-slate-700 rounded-lg pl-9 pr-10 py-2.5 text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none"
         />
         {value !== null && (
@@ -202,7 +206,7 @@ const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
               setIsOpen(false);
             }}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-dark-muted hover:text-white transition-colors"
-            title="Clear selected owner"
+            title={t('user_clear_selected')}
           >
             <X size={14} />
           </button>
@@ -222,7 +226,7 @@ const UserSearchSelect: React.FC<UserSearchSelectProps> = ({
           className="max-h-60 overflow-auto rounded-lg border border-dark-border bg-dark-bg shadow-2xl"
         >
           {filteredUsers.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-dark-muted">No user found.</p>
+            <p className="px-3 py-2 text-sm text-dark-muted">{t('user_no_results')}</p>
           ) : (
             filteredUsers.map((user) => {
               const isSelected = user.id === value;
